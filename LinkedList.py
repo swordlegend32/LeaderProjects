@@ -1,5 +1,7 @@
 class Node():
 
+    def __init__(self,value):
+        self.value = value
 
     def __str__(self):
         return f"value: {self.value}, next: {self.next.value}, previous: {self.previous.value}"
@@ -16,7 +18,6 @@ class LinkedList():
                 Nodes[i].previous = Nodes[i - 1]
             if i < len(Nodes) - 1:
                 Nodes[i].next = Nodes[i + 1]
-    
 
     def InsertBack(self,Node : Node):
         Node.previous = self.Last
@@ -36,7 +37,6 @@ class LinkedList():
         Start = self.First
         while Start.value != value:
             Start = Start.next
-        
         return Start
 
 
