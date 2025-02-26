@@ -15,7 +15,7 @@ class Node:
 
 class LinkedList:
     def __init__(self, nodes: list[Node], doubly_linked: bool = False, circular: bool = False):
-        if not nodes or len(nodes) == 0:
+        if not nodes:
             raise ValueError("LinkedList must be initialized with at least one node.")
         
         self.first: Node = nodes[0]
@@ -23,85 +23,77 @@ class LinkedList:
         self.doubly_linked = doubly_linked
         self.circular = circular
 
-        for i in range(len(nodes)):
-            if i > 0:
-                if self.doubly_linked:
-                    nodes[i].previous = nodes[i - 1]
-            if i < len(nodes) - 1:
-                nodes[i].next = nodes[i + 1]
+        for i in range(len(nodes) - 1):
+            nodes[i].next = nodes[i + 1]
+            if self.doubly_linked:
+                nodes[i + 1].previous = nodes[i]
+
+        if self.circular:
+            self.last.next = self.first
+            if self.doubly_linked:
+                self.first.previous = self.last
 
     def insert_back(self, node: Node) -> None:
+        self.last.next = node
         if self.doubly_linked:
             node.previous = self.last
-        self.last.next = node
+        
         self.last = node
-        if self.circular:  
+        if self.circular:
             node.next = self.first
             self.first.previous = node
-        else:
-            node.next = None
 
     def insert_front(self, node: Node) -> None:
         node.next = self.first
         if self.doubly_linked:
-            if self.circular:
-                node.previous = self.last
-                self.last.next = node
-            else:
-                node.previous = None
+            node.previous = self.last if self.circular else None
             self.first.previous = node
+        
+        if self.circular:
+            self.last.next = node
+        
         self.first = node
     
     def remove(self, node: Node) -> None:
-        if self.doubly_linked:
-            if node.previous:
-                node.previous.next = node.next
-            if node.next:
-                node.next.previous = node.previous
-        else:
-            if node.previous:
-                node.previous.next = node.next
         if node == self.first:
             self.first = node.next
         if node == self.last:
             self.last = node.previous
-
-    def manual_insert(self, node: Node) -> None:
-
-        if not node.next and not node.previous:
-            raise ValueError("Node must have at least one connection.")
         
-        if not node.next and not self.doubly_linked:
+        if node.previous:
+            node.previous.next = node.next
+        if node.next:
+            node.next.previous = node.previous
+    
+    def manual_insert(self, node: Node) -> None:
+        if not (node.next or node.previous):
+            raise ValueError("Node must have at least one connection.")
+        if not self.doubly_linked and not node.next:
             raise ValueError("Singly linked list must have a next node.")
-
+        
         if self.doubly_linked:
             if node.previous:
                 node.previous.next = node
-            else:
-                node.previous = node.next.previous
-                node.next.previous.next = node
-                node.next.previous = node
             if node.next:
                 node.next.previous = node
         else:
             node.previous = None
         
-        Finder = self.first
-        if node.next != self.first:
-            while Finder.next != node.next:
-                Finder = Finder.next
-        
-            Finder.next = node
-
         if node.next == self.first:
             self.first = node
+        else:
+            finder = self.first
+            while finder and finder.next != node.next:
+                finder = finder.next
+            
+            finder.next = node
 
         if self.last.next == node:
             self.last = node
 
         if not self.circular:
             self.remove_loop()
-            
+    
     def get_node_from_value(self, value: Any) -> Optional[Node]:
         current = self.first
         while current:
@@ -109,12 +101,11 @@ class LinkedList:
                 return current
             current = current.next
         return None
-
+    
     def detect_loop(self) -> Tuple[bool, Optional[Node]]:
         slow, fast = self.first, self.first
         while fast and fast.next:
-            slow = slow.next
-            fast = fast.next.next
+            slow, fast = slow.next, fast.next.next
             if slow == fast:
                 print(f"Loop detected at {slow.value}")
                 return True, slow
@@ -125,29 +116,22 @@ class LinkedList:
         if loop_detected:
             slow = self.first
             while slow != loop_node:
-                slow = slow.next
-                loop_node = loop_node.next
+                slow, loop_node = slow.next, loop_node.next
             
             prev = loop_node
             while prev.next != loop_node:
                 prev = prev.next
             
-            prev.next = None 
+            prev.next = None
             print("Loop removed.")
         else:
             print("No loop detected.")
     
     def __str__(self) -> str:
-        values = []
-        current = self.first
+        values, current = [], self.first
         while current:
             values.append(f"[{str(current)}]")
             current = current.next
-            if current == self.first:  # To handle circular linked list
+            if current == self.first:  # Handle circular linked list
                 break
         return " -> ".join(values)
-
-# nodes = [Node(i) for i in range(1, 21)]
-# linked_list = LinkedList(nodes, doubly_linked=True, circular=True)
-# linked_list.insert_front(Node(21))
-# print(linked_list)
