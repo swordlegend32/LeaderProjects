@@ -16,7 +16,11 @@ class Node:
 class LinkedList:
     def __init__(self, nodes: list[Node], doubly_linked: bool = False, circular: bool = False):
         if not nodes:
-            raise ValueError("LinkedList must be initialized with at least one node.")
+            self.first = None
+            self.last = None
+            self.doubly_linked = doubly_linked
+            self.circular = circular
+            return
         
         self.first: Node = nodes[0]
         self.last: Node = nodes[-1]
@@ -34,25 +38,32 @@ class LinkedList:
                 self.first.previous = self.last
 
     def insert_back(self, node: Node) -> None:
-        self.last.next = node
+        if self.last: self.last.next = node
+
         if self.doubly_linked:
-            node.previous = self.last
+            if self.last: node.previous = self.last
         
         self.last = node
         if self.circular:
             node.next = self.first
             self.first.previous = node
+        
+        if self.first is None:
+            self.first = node
 
     def insert_front(self, node: Node) -> None:
-        node.next = self.first
+        if self.first: node.next = self.first
         if self.doubly_linked:
-            node.previous = self.last if self.circular else None
-            self.first.previous = node
+            node.previous = self.last if self.circular and self.last else None
+            if self.first: self.first.previous = node
         
         if self.circular:
             self.last.next = node
         
         self.first = node
+
+        if self.last is None:
+            self.last = node
     
     def remove(self, node: Node) -> None:
         if node == self.first:
@@ -70,7 +81,9 @@ class LinkedList:
             raise ValueError("Node must have at least one connection.")
         if not self.doubly_linked and not node.next:
             raise ValueError("Singly linked list must have a next node.")
-        
+        if not self.first or self.last:
+            raise ValueError("List must have a first and last node to insert manually.")
+
         if self.doubly_linked:
             if node.previous:
                 node.previous.next = node
@@ -132,6 +145,6 @@ class LinkedList:
         while current:
             values.append(f"[{str(current)}]")
             current = current.next
-            if current == self.first:  # Handle circular linked list
+            if current == self.first:
                 break
         return " -> ".join(values)
