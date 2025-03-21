@@ -1,0 +1,95 @@
+.GridCell{
+    width: 50px;
+    height: 50px;
+    border: 2px solid black;
+    background-color: rgb(219, 217, 217);
+    color: white;
+    transition: background-color 0.25s;
+
+}
+
+.OcupiedGridCell{
+    width: 50px;
+    height: 50px;
+    border: 2px solid black;
+    display: inline-block;
+    background-color: rgb(30, 30, 30);
+    transition: background-color 0.1s;
+
+}
+
+.StartGridCell{
+    width: 50px;
+    height: 50px;
+    border: 2px solid black;
+    display: inline-block;
+    background-color: green;
+    transition: background-color 0.25s;
+
+}
+
+.FinishGridCell{
+    width: 50px;
+    height: 50px;
+    border: 2px solid black;
+    display: inline-block;
+    background-color: rgb(165, 0, 0);
+    transition: background-color 0.25s;
+
+}
+
+#StartNodeBuilder{
+    background-color: green;
+}
+
+#EndNodeBuilder{
+    background-color: rgb(165, 0, 0);
+}
+
+#WallNodeBuilder{
+    background-color: rgb(30, 30, 30);
+}
+
+.BuilderButtons{
+    margin-left: 5px;
+    width: 50px;
+    height: 50px;
+    border: 2px solid black;
+    display: inline-block;
+    font-weight: bold;
+    font-family: 'Times New Roman', Times, serif;
+    transition: background-color 0.25s;
+}
+
+#EndNodeBuilder:hover{
+    background-color: rgb(255, 0, 0);
+}
+
+#StartNodeBuilder:hover{
+    background-color: rgb(9, 231, 9);
+}
+
+#WallNodeBuilder:hover{
+    background-color: rgb(55, 55, 55);
+}
+
+
+#buttons{
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+    margin-right: 250px;
+}
+
+#container {
+    display: inline-grid;
+    grid-template-columns: repeat(20, 50px);
+    grid-template-rows: repeat(20, 50px);
+    height: 400px;
+    margin: 50px;
+}
+
+body {
+    background-color: hsl(0, 0%, 15%);
+}
+
