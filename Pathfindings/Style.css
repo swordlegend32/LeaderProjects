@@ -1,6 +1,6 @@
 .GridCell{
-    width: 50px;
-    height: 50px;
+    width: 25px;
+    height: 25px;
     border: 2px solid black;
     background-color: rgb(219, 217, 217);
     color: white;
@@ -9,8 +9,8 @@
 }
 
 .OcupiedGridCell{
-    width: 50px;
-    height: 50px;
+    width: 25px;
+    height: 25px;
     border: 2px solid black;
     display: inline-block;
     background-color: rgb(30, 30, 30);
@@ -19,8 +19,8 @@
 }
 
 .StartGridCell{
-    width: 50px;
-    height: 50px;
+    width: 25px;
+    height: 25px;
     border: 2px solid black;
     display: inline-block;
     background-color: green;
@@ -29,8 +29,8 @@
 }
 
 .FinishGridCell{
-    width: 50px;
-    height: 50px;
+    width: 25px;
+    height: 25px;
     border: 2px solid black;
     display: inline-block;
     background-color: rgb(165, 0, 0);
@@ -39,8 +39,8 @@
 }
 
 .PathGridCell{
-    width: 50px;
-    height: 50px;
+    width: 25px;
+    height: 25px;
     border: 2px solid black;
     display: inline-block;
     background-color: purple;
@@ -49,8 +49,8 @@
 }
 
 .QueueGridCell{
-    width: 50px;
-    height: 50px;
+    width: 25px;
+    height: 25px;
     border: 2px solid black;
     display: inline-block;
     background-color: grey;
@@ -59,8 +59,8 @@
 }
 
 .SearchedGridCell{
-    width: 50px;
-    height: 50px;
+    width: 25px;
+    height: 25px;
     border: 2px solid black;
     display: inline-block;
     background-color: yellow;
@@ -80,15 +80,12 @@
     background-color: rgb(30, 30, 30);
 }
 
-.BuilderButtons{
-    margin-left: 5px;
-    width: 50px;
-    height: 50px;
-    border: 2px solid black;
-    display: inline-block;
-    font-weight: bold;
-    font-family: 'Times New Roman', Times, serif;
-    transition: background-color 0.25s;
+#StartPathfinding{
+    background-color: rgb(65, 155, 5);
+}
+
+#ResetGrid{
+    background-color: rgb(177, 43, 10);
 }
 
 #EndNodeBuilder:hover{
@@ -103,6 +100,28 @@
     background-color: rgb(55, 55, 55);
 }
 
+#StartPathfinding:hover{
+    background-color: rgb(108, 255, 11);
+}
+
+#ResetGrid:hover{
+    background-color: rgb(255, 83, 40);
+}
+
+
+.BuilderButtons{
+    margin-left: 5px;
+    width: 50px;
+    height: 50px;
+    border: 2px solid black;
+    display: inline-block;
+    font-weight: bold;
+    font-family: 'Times New Roman', Times, serif;
+    transition: background-color 0.25s;
+}
+
+
+
 
 #buttons{
     display: flex;
@@ -113,8 +132,8 @@
 
 #container {
     display: grid;
-    grid-template-columns: repeat(20, 50px);
-    grid-template-rows: repeat(8, 50px);
+    grid-template-columns: repeat(40, 25px);
+    grid-template-rows: repeat(16, 25px);
     margin: 50px;
 }
 

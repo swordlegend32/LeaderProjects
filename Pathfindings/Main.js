@@ -1,7 +1,7 @@
 
 const Container = document.getElementById('container');
-let Rows = 8;
-let Columns = 20;
+let Rows = 16;
+let Columns = 40;
 let Grid = [];
 let ElementGrid = [];
 
@@ -25,7 +25,27 @@ let EndElement = null;
 let StartNode = null;
 let EndNode = null;
 
+let PathfindingComplete = false
+function ResetGrid() {
+    for (let i = 0; i < Rows; i++) {
+        for (let j = 0; j < Columns; j++) {
+            let Element = document.getElementById(`${i}/${j}`)
+
+            if (Element === null || Element == undefined) {
+                continue
+            }
+
+            if (Element.className != "StartGridCell" && Element.className != "FinishGridCell" && Element.className != "OcupiedGridCell" && Element.className != "GridCell") {
+                Element.className = "GridCell"
+            }
+        }
+    }
+}
+
+
+
 function CreateGrid() {
+
     for (let i = 0; i < Rows; i++) {
         Grid[i] = [];
         ElementGrid[i] = [];
@@ -54,8 +74,15 @@ async function BreadthWidthSearch() {
         return;
     }
 
+    if (PathfindingComplete === true) {
+        ResetGrid()
+        PathfindingComplete = false
+        alert("Pathfinding Already Complete");
+        return;
+    }
+
     let OpenList = [];
-    let Seen = new Set();
+    let Seen = [];
 
     OpenList.push(StartNode);
 
@@ -63,6 +90,23 @@ async function BreadthWidthSearch() {
         let CurrentNode = OpenList.shift();
 
         if (CurrentNode.x === EndNode.x && CurrentNode.y === EndNode.y) {
+
+            for (let i = 0; i < Seen.length; i ++) {
+                let CurrentGridCell = Seen[i]
+                let ElementCell = document.getElementById(`${CurrentGridCell.x}/${CurrentGridCell.y}`);
+                if (ElementCell && ElementCell.className == "SearchedGridCell" || ElementCell.className == "QueueGridCell" || ElementCell.className == "PathGridCell") {
+                    ElementCell.className = "GridCell";
+                }
+            }
+
+            for (let i = 0; i < OpenList.length; i ++) {
+                let CurrentGridCell = OpenList[i]
+                let ElementCell = document.getElementById(`${CurrentGridCell.x}/${CurrentGridCell.y}`);
+                if (ElementCell && ElementCell.className == "SearchedGridCell" || ElementCell.className == "QueueGridCell" || ElementCell.className == "PathGridCell") {
+                    ElementCell.className = "GridCell";
+                }
+            }
+
             let PathNode = CurrentNode
             while (PathNode.PrevoiusNode != null) {
                 PathNode = PathNode.PrevoiusNode
@@ -80,7 +124,7 @@ async function BreadthWidthSearch() {
         for (let i = 0; i < Neighbors.length; i++) {
             let Neighbor = Neighbors[i];
 
-            if (Seen.has(Neighbor) || OpenList.includes(Neighbor)) {
+            if (Seen.includes(Neighbor) || OpenList.includes(Neighbor)) {
                 continue;
             }
 
@@ -98,16 +142,16 @@ async function BreadthWidthSearch() {
             }
 
         }
-        Seen.add(CurrentNode);
+        Seen.push(CurrentNode);
         let currentElement = document.getElementById(`${CurrentNode.x}/${CurrentNode.y}`);
         if (currentElement && currentElement.className == "QueueGridCell") {
             currentElement.className = "SearchedGridCell";
-        
         }
            
 
         await new Promise(resolve => setTimeout(resolve, 25));
     }
+    PathfindingComplete = true
 }
 
 
