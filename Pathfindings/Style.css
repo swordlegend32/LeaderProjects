@@ -38,6 +38,36 @@
 
 }
 
+.PathGridCell{
+    width: 50px;
+    height: 50px;
+    border: 2px solid black;
+    display: inline-block;
+    background-color: purple;
+    transition: background-color 0.25s;
+
+}
+
+.QueueGridCell{
+    width: 50px;
+    height: 50px;
+    border: 2px solid black;
+    display: inline-block;
+    background-color: grey;
+    transition: background-color 0.05s;
+
+}
+
+.SearchedGridCell{
+    width: 50px;
+    height: 50px;
+    border: 2px solid black;
+    display: inline-block;
+    background-color: yellow;
+    transition: background-color 0.05s;
+
+}
+
 #StartNodeBuilder{
     background-color: green;
 }
@@ -82,12 +112,12 @@
 }
 
 #container {
-    display: inline-grid;
+    display: grid;
     grid-template-columns: repeat(20, 50px);
-    grid-template-rows: repeat(20, 50px);
-    height: 400px;
+    grid-template-rows: repeat(8, 50px);
     margin: 50px;
 }
+
 
 body {
     background-color: hsl(0, 0%, 15%);
