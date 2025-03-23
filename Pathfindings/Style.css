@@ -23,6 +23,10 @@
     height: 25px;
     border: 2px solid black;
     display: inline-block;
+    font-weight: bold;
+    font-family: sans-serif;
+    text-align: center;
+    font-size: 1.25em;
     background-color: green;
     transition: background-color 0.25s;
 
@@ -33,7 +37,11 @@
     height: 25px;
     border: 2px solid black;
     display: inline-block;
-    background-color: rgb(165, 0, 0);
+    font-weight: bold;
+    font-family: sans-serif;     
+    text-align: center;
+    font-size: 1.25em;
+    background-color: rgb(0, 153, 173);
     transition: background-color 0.25s;
 
 }
@@ -53,7 +61,7 @@
     height: 25px;
     border: 2px solid black;
     display: inline-block;
-    background-color: grey;
+    background-color: cyan;
     transition: background-color 0.05s;
 
 }
@@ -63,7 +71,7 @@
     height: 25px;
     border: 2px solid black;
     display: inline-block;
-    background-color: yellow;
+    background-color: red;
     transition: background-color 0.05s;
 
 }
@@ -73,7 +81,7 @@
 }
 
 #EndNodeBuilder{
-    background-color: rgb(165, 0, 0);
+    background-color: rgb(0, 153, 173);
 }
 
 #WallNodeBuilder{
@@ -89,7 +97,7 @@
 }
 
 #EndNodeBuilder:hover{
-    background-color: rgb(255, 0, 0);
+    background-color: rgb(2, 205, 231);
 }
 
 #StartNodeBuilder:hover{

@@ -26,6 +26,7 @@ let StartNode = null;
 let EndNode = null;
 
 let PathfindingComplete = false
+
 function ResetGrid() {
     for (let i = 0; i < Rows; i++) {
         for (let j = 0; j < Columns; j++) {
@@ -42,10 +43,7 @@ function ResetGrid() {
     }
 }
 
-
-
 function CreateGrid() {
-
     for (let i = 0; i < Rows; i++) {
         Grid[i] = [];
         ElementGrid[i] = [];
@@ -65,6 +63,30 @@ function CreateGrid() {
             ElementGrid[i][j] = GridCell;
         }
     }
+}
+
+function GetNeighbors(Node) {
+    const XVector = [1, 0, -1, 0];
+    const YVector = [0, 1, 0, -1];
+
+    let Neighbors = [];
+
+    for (let i = 0; i < 4; i++) {
+        let NewX = Node.x + XVector[i];
+        let NewY = Node.y + YVector[i];
+
+        if (NewX >= 0 && NewX < Rows && NewY >= 0 && NewY < Columns) {
+            let Neighbor = Grid[NewX][NewY];
+            if (!Neighbor) {
+                console.error(`Invalid Neighbor at (${NewX}, ${NewY})`);
+            }
+            if (Neighbor.Type === "Wall" || Neighbor.Type === "Start") {
+                continue;
+            }
+            Neighbors.push(Neighbor);
+        }
+    }
+    return Neighbors;
 }
 
 
@@ -115,7 +137,7 @@ async function BreadthWidthSearch() {
                 }
                 let Element = document.getElementById(`${PathNode.x}/${PathNode.y}`);
                 Element.className = "PathGridCell";
-               
+                await new Promise(resolve => setTimeout(resolve, 50));
             }
             break;
         }
@@ -155,34 +177,6 @@ async function BreadthWidthSearch() {
 }
 
 
-
-
-
-function GetNeighbors(Node) {
-    const XVector = [1, 0, -1, 0];
-    const YVector = [0, 1, 0, -1];
-
-    let Neighbors = [];
-
-    for (let i = 0; i < 4; i++) {
-        let NewX = Node.x + XVector[i];
-        let NewY = Node.y + YVector[i];
-
-        if (NewX >= 0 && NewX < Rows && NewY >= 0 && NewY < Columns) {
-            let Neighbor = Grid[NewX][NewY];
-            if (!Neighbor) {
-                console.error(`Invalid Neighbor at (${NewX}, ${NewY})`);
-            }
-            if (Neighbor.Type === "Wall" || Neighbor.Type === "Start") {
-                continue;
-            }
-            Neighbors.push(Neighbor);
-        }
-    }
-    return Neighbors;
-}
-
-
 function sleep(milliseconds) {
     var start = new Date().getTime();
     for (var i = 0; i < 1e7; i++) {
@@ -192,7 +186,8 @@ function sleep(milliseconds) {
     }
   }
 
-function AStarSearch() {
+async function AStarSearch() {
+
     if (StartNode == null || EndNode == null ) {
         alert("Please select a start and end node");
         return;
@@ -226,14 +221,17 @@ Container.addEventListener('click', function(event) {
 
         if (StartElement != null & StartElement != clickedElement) {
             StartElement.className = "GridCell";
+            StartElement.textContent = ""
+            StartNode.Type = "Empty"
             StartNode = null;
         }
 
         if (clickedElement.className == "StartGridCell") {
-            clickedElement.className = "GridCell";
+            clickedElement.className = "GridCell";  
         } else {
             StartElement = clickedElement;
             StartElement.className = "StartGridCell";
+            StartElement.textContent = "A"
 
             StartNode = StartElement.id.split("/");
             StartNode = Grid[parseInt(StartNode[0])][parseInt(StartNode[1])];
@@ -243,6 +241,8 @@ Container.addEventListener('click', function(event) {
     if (CurrentlyBuilding == "Finish") {
         if (EndElement != null & EndElement != clickedElement) {
             EndElement.className = "GridCell";
+            EndElement.textContent = ""
+            EndNode.Type = "Empty"
             EndNode = null;
         }
 
@@ -251,6 +251,7 @@ Container.addEventListener('click', function(event) {
         } else {
             EndElement = clickedElement;
             EndElement.className = "FinishGridCell";
+            EndElement.textContent = "B"
 
             EndNode = EndElement.id.split("/");
             EndNode = Grid[parseInt(EndNode[0])][parseInt(EndNode[1])];
