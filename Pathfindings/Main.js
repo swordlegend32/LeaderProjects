@@ -4,6 +4,7 @@ let Rows = 16;
 let Columns = 40;
 let Grid = [];
 
+
 const StartBuildButton = document.getElementById('StartNodeBuilder');
 StartBuildButton.addEventListener('click', PressStartBuildButton);
 
@@ -30,6 +31,12 @@ GridSizeSlider.addEventListener('change', function() {
     ResizeGrid()
 });
 
+const SpeedSlider = document.getElementById('Speed');
+SpeedSlider.addEventListener('change', function() {
+    Speed = SpeedSlider.value
+    SkipWait = true
+});
+
 let CurrentlyBuilding = null;
 
 let StartElement = null;
@@ -41,6 +48,14 @@ let EndNode = null;
 let PathfindingInProcess = false;
 
 let scale = 1;
+let Speed = 1;
+
+let SkipWait = false;
+
+function lerp(a, b, n) {
+    return (1 - n) * a + n * b;
+}
+
 
 let ChosenAlgorithm = "BreadthWidthSearch";
 
@@ -281,11 +296,34 @@ async function BreadthWidthSearch() {
             currentElement.className = "SearchedGridCell";
         }
 
-        await new Promise(resolve => setTimeout(resolve, 5));
+        const WaitTime = calculateWaitTime(Speed);
+        if (WaitTime > 1) {
+            for (let i = 0; i < WaitTime; i++) {
+                if (SkipWait) {
+                    SkipWait = false;
+                    break;
+                }
+                await new Promise(resolve => setTimeout(resolve, 1));
+                }
+            }        
     }
 
     PathfindingInProcess = false;
     ResetCosts();
+}
+
+function calculateWaitTime(Speed) {
+    if (Speed >= 100) {
+        return 0;
+    }
+    if (Speed <= 0) {
+        return 50000;
+    }
+
+    const maxWaitTime = 100;
+    const minWaitTime = 0; 
+
+   return lerp(maxWaitTime, minWaitTime, Speed / 100);
 }
 
 async function AStarSearch() {
@@ -363,7 +401,7 @@ async function AStarSearch() {
                 let Element = document.getElementById(`${PathNode.x}/${PathNode.y}`);
                 Element.className = "PathGridCell";
                 Element.textContent = "";
-                await new Promise(resolve => setTimeout(resolve, 50));
+                await new Promise(resolve => setTimeout(resolve, 25));
             }
             return;
         }
@@ -414,7 +452,17 @@ async function AStarSearch() {
             CurrentElement.className = "SearchedGridCell";
         }
 
-        await new Promise(resolve => setTimeout(resolve, 5));
+        const WaitTime = calculateWaitTime(Speed);
+
+        if (WaitTime > 1) {
+            for (let i = 0; i < WaitTime; i++) {
+                if (SkipWait) {
+                    SkipWait = false;
+                    break;
+                }
+                await new Promise(resolve => setTimeout(resolve, 1));
+                }
+            } 
     }
     PathfindingInProcess = false;
     ResetCosts();
