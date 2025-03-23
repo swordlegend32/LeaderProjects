@@ -17,6 +17,12 @@ WallBuildButton.addEventListener('click', PressWallBuildButton);
 const StartPathfinding = document.getElementById('StartPathfinding');
 StartPathfinding.addEventListener('click', StartPathfindingButton);
 
+const ResetGridButtonB = document.getElementById('ResetGridButton');
+ResetGridButtonB.addEventListener('click', ResetGridButton);
+
+const PathfindingSelect = document.getElementById('Algorithms');
+PathfindingSelect.addEventListener('change', OptionChanged);
+
 let CurrentlyBuilding = null;
 
 let StartElement = null;
@@ -25,7 +31,9 @@ let EndElement = null;
 let StartNode = null;
 let EndNode = null;
 
-let PathfindingComplete = false
+let PathfindingInProcess = false;
+
+let ChosenAlgorithm = "BreadthWidthSearch";
 
 function ResetGrid() {
     for (let i = 0; i < Rows; i++) {
@@ -44,6 +52,18 @@ function ResetGrid() {
 }
 
 function CreateGrid() {
+
+    StartNode = null;
+    EndNode = null;
+    StartElement = null;
+    EndElement = null;
+    PathfindingInProcess = false
+
+
+    while (Container.firstChild) {
+        Container.removeChild(Container.firstChild);
+    }   
+
     for (let i = 0; i < Rows; i++) {
         Grid[i] = [];
         ElementGrid[i] = [];
@@ -90,21 +110,33 @@ function GetNeighbors(Node) {
 }
 
 
+function sleep(milliseconds) {
+    var start = new Date().getTime();
+    for (var i = 0; i < 1e7; i++) {
+      if ((new Date().getTime() - start) > milliseconds){
+        break;
+      }
+    }
+}
+
 async function BreadthWidthSearch() {
     if (StartNode == null || EndNode == null) {
         alert("Please select a start and end node");
         return;
     }
 
-    if (PathfindingComplete === true) {
-        ResetGrid()
-        PathfindingComplete = false
-        alert("Pathfinding Already Complete");
+    if (PathfindingInProcess === true) {
+        alert("Pathfinding Already In Process");
         return;
     }
 
+
+    ResetGrid();
+    PathfindingInProcess = true;
+
+
     let OpenList = [];
-    let Seen = [];
+    let ClosedList = [];
 
     OpenList.push(StartNode);
 
@@ -113,8 +145,8 @@ async function BreadthWidthSearch() {
 
         if (CurrentNode.x === EndNode.x && CurrentNode.y === EndNode.y) {
 
-            for (let i = 0; i < Seen.length; i ++) {
-                let CurrentGridCell = Seen[i]
+            for (let i = 0; i < ClosedList.length; i ++) {
+                let CurrentGridCell = ClosedList[i]
                 let ElementCell = document.getElementById(`${CurrentGridCell.x}/${CurrentGridCell.y}`);
                 if (ElementCell && ElementCell.className == "SearchedGridCell" || ElementCell.className == "QueueGridCell" || ElementCell.className == "PathGridCell") {
                     ElementCell.className = "GridCell";
@@ -130,8 +162,8 @@ async function BreadthWidthSearch() {
             }
 
             let PathNode = CurrentNode
-            while (PathNode.PrevoiusNode != null) {
-                PathNode = PathNode.PrevoiusNode
+            while (PathNode.Parent != null) {
+                PathNode = PathNode.Parent
                 if (PathNode.Type === "Start") {
                     break;
                 }
@@ -139,6 +171,7 @@ async function BreadthWidthSearch() {
                 Element.className = "PathGridCell";
                 await new Promise(resolve => setTimeout(resolve, 50));
             }
+            PathfindingInProcess = true;
             break;
         }
 
@@ -146,7 +179,7 @@ async function BreadthWidthSearch() {
         for (let i = 0; i < Neighbors.length; i++) {
             let Neighbor = Neighbors[i];
 
-            if (Seen.includes(Neighbor) || OpenList.includes(Neighbor)) {
+            if (ClosedList.includes(Neighbor) || OpenList.includes(Neighbor)) {
                 continue;
             }
 
@@ -154,7 +187,7 @@ async function BreadthWidthSearch() {
                 continue;
             }
 
-            Neighbor["PrevoiusNode"] = CurrentNode;
+            Neighbor["Parent"] = CurrentNode;
 
             OpenList.push(Neighbor);
 
@@ -164,37 +197,144 @@ async function BreadthWidthSearch() {
             }
 
         }
-        Seen.push(CurrentNode);
+        ClosedList.push(CurrentNode);
         let currentElement = document.getElementById(`${CurrentNode.x}/${CurrentNode.y}`);
         if (currentElement && currentElement.className == "QueueGridCell") {
             currentElement.className = "SearchedGridCell";
         }
            
 
-        await new Promise(resolve => setTimeout(resolve, 25));
+        await new Promise(resolve => setTimeout(resolve, 5));
     }
-    PathfindingComplete = true
+
+    PathfindingInProcess = false;
 }
 
 
-function sleep(milliseconds) {
-    var start = new Date().getTime();
-    for (var i = 0; i < 1e7; i++) {
-      if ((new Date().getTime() - start) > milliseconds){
-        break;
-      }
-    }
-  }
+
 
 async function AStarSearch() {
 
-    if (StartNode == null || EndNode == null ) {
+    if (StartNode == null || EndNode == null) {
         alert("Please select a start and end node");
         return;
     }
 
-    
+    if (PathfindingInProcess === true) {
+        alert("Pathfinding Already In Process");
+        return;
+    }
+
+    ResetGrid();
+    PathfindingInProcess = true;
+
+    let OpenList = [];
+    let ClosedList = [];
+
+    let ListNode = StartNode;
+    let GCost = 0;
+    let HCost = Math.abs(EndNode.x - ListNode.x) + Math.abs(EndNode.y - ListNode.y);
+    let FCost = GCost + HCost;
+
+    ListNode["GCost"] = GCost;
+    ListNode["HCost"] = HCost;
+    ListNode["FCost"] = FCost;
+    ListNode["Parent"] = null;
+
+    OpenList.push(ListNode);
+
+    function GetLowestFCostNode() {
+        let LowestFCostNode = OpenList[0];
+
+        for (let i = 1; i < OpenList.length; i++) {
+            if (OpenList[i].FCost < LowestFCostNode.FCost) {
+                LowestFCostNode = OpenList[i];
+            }
+        }
+        return LowestFCostNode;
+    }
+
+    while (OpenList.length > 0) {
+        let CurrentNode = GetLowestFCostNode();
+
+        if (CurrentNode.x === EndNode.x && CurrentNode.y === EndNode.y) {
+
+            for (let i = 0; i < ClosedList.length; i++) {
+                let CurrentGridCell = ClosedList[i];
+                let ElementCell = document.getElementById(`${CurrentGridCell.x}/${CurrentGridCell.y}`);
+                if (ElementCell && (ElementCell.className == "SearchedGridCell" || ElementCell.className == "QueueGridCell" || ElementCell.className == "PathGridCell")) {
+                    ElementCell.className = "GridCell";
+                    ElementCell.textContent = "";
+                }
+            }
+
+            for (let i = 0; i < OpenList.length; i++) {
+                let CurrentGridCell = OpenList[i];
+                let ElementCell = document.getElementById(`${CurrentGridCell.x}/${CurrentGridCell.y}`);
+                if (ElementCell && (ElementCell.className == "SearchedGridCell" || ElementCell.className == "QueueGridCell" || ElementCell.className == "PathGridCell")) {
+                    ElementCell.className = "GridCell";
+                    ElementCell.textContent = "";
+                }
+            }
+
+            let PathNode = CurrentNode;
+            while (PathNode.Parent != null) {
+                PathNode = PathNode.Parent;
+                if (PathNode.Type === "Start") {
+                    PathfindingInProcess = false;
+                    break;
+                }
+                let Element = document.getElementById(`${PathNode.x}/${PathNode.y}`);
+                Element.className = "PathGridCell";
+                Element.textContent = "";
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+            return;
+        }
+
+        OpenList.splice(OpenList.indexOf(CurrentNode), 1);
+        ClosedList.push(CurrentNode);
+
+        let Neighbors = GetNeighbors(CurrentNode);
+
+        for (let i = 0; i < Neighbors.length; i++) {
+            let Neighbor = Neighbors[i];
+
+            if (ClosedList.includes(Neighbor) || Neighbor.Type === "Wall") {
+                continue;
+            }
+
+            let TentativeGCost = CurrentNode.GCost + 1;
+
+            if (!OpenList.includes(Neighbor) || TentativeGCost < Neighbor.GCost) {
+                Neighbor["GCost"] = TentativeGCost;
+                Neighbor["HCost"] = Math.abs(EndNode.x - Neighbor.x) + Math.abs(EndNode.y - Neighbor.y);
+                Neighbor["FCost"] = Neighbor.GCost + Neighbor.HCost;
+                Neighbor["Parent"] = CurrentNode;
+
+                if (!OpenList.includes(Neighbor)) {
+                    OpenList.push(Neighbor);
+                    let ElementCell = document.getElementById(`${Neighbor.x}/${Neighbor.y}`);
+                    if (ElementCell && ElementCell.className == "GridCell") {
+                        ElementCell.className = "QueueGridCell";
+                        ElementCell.innerHTML = `${Neighbor.GCost} ${Neighbor.HCost} <br> ${Neighbor.FCost}`;
+                        // ElementCell.style.fontSize = "0.6em";
+                        // ElementCell.style.textAlign = "center";
+                    }
+                }
+            }
+        }
+
+        let CurrentElement = document.getElementById(`${CurrentNode.x}/${CurrentNode.y}`);
+        if (CurrentElement && CurrentElement.className == "QueueGridCell") {
+            CurrentElement.className = "SearchedGridCell";
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 5));
+    }
+    PathfindingInProcess = false;
 }
+
 
 function PressStartBuildButton() {
     CurrentlyBuilding = "Start";
@@ -209,11 +349,28 @@ function PressWallBuildButton() {
 }
 
 function StartPathfindingButton() {
-    BreadthWidthSearch()
+    if (ChosenAlgorithm === "BreadthWidthSearch") {
+        BreadthWidthSearch();
+    } else if (ChosenAlgorithm === "A*") {
+        AStarSearch()
+    }
+    else {
+        alert("Algorithm Not Yet Implemented");
+    }
+   
 }
+
+function ResetGridButton() {
+    CreateGrid();
+}
+
+function OptionChanged() {
+    ChosenAlgorithm = PathfindingSelect.value;
+}
+
 Container.addEventListener('click', function(event) {
     const clickedElement = event.target;
-    if (clickedElement.className != "GridCell" && clickedElement.className != "StartGridCell" && clickedElement.className != "FinishGridCell" && clickedElement.className != "OcupiedGridCell") {
+    if (clickedElement.className != "GridCell" && clickedElement.className != "StartGridCell" && clickedElement.className != "FinishGridCell" && clickedElement.className != "OcupiedGridCell" && clickedElement.className != "PathGridCell") {
         return
     }
 

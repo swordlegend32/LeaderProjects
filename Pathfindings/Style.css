@@ -5,7 +5,12 @@
     background-color: rgb(219, 217, 217);
     color: white;
     transition: background-color 0.25s;
+    border-radius: 2px;
 
+    text-align: center;
+    font-size: 0.6em;
+    font-family: sans-serif;
+    font-weight: bold;
 }
 
 .OcupiedGridCell{
@@ -15,7 +20,12 @@
     display: inline-block;
     background-color: rgb(30, 30, 30);
     transition: background-color 0.1s;
+    border-radius: 2px;
 
+    text-align: center;
+    font-size: 0.6em;
+    font-family: sans-serif;
+    font-weight: bold;
 }
 
 .StartGridCell{
@@ -29,7 +39,7 @@
     font-size: 1.25em;
     background-color: green;
     transition: background-color 0.25s;
-
+    border-radius: 2px;
 }
 
 .FinishGridCell{
@@ -43,7 +53,7 @@
     font-size: 1.25em;
     background-color: rgb(0, 153, 173);
     transition: background-color 0.25s;
-
+    border-radius: 2px;
 }
 
 .PathGridCell{
@@ -53,7 +63,12 @@
     display: inline-block;
     background-color: purple;
     transition: background-color 0.25s;
+    border-radius: 2px;
 
+    text-align: center;
+    font-size: 0.6em;
+    font-family: sans-serif;
+    font-weight: bold;
 }
 
 .QueueGridCell{
@@ -61,9 +76,12 @@
     height: 25px;
     border: 2px solid black;
     display: inline-block;
-    background-color: cyan;
+    background-color: yellowgreen;
     transition: background-color 0.05s;
-
+    text-align: center;
+    font-size: 0.6em;
+    font-family: sans-serif;
+    font-weight: bold;
 }
 
 .SearchedGridCell{
@@ -74,6 +92,9 @@
     background-color: red;
     transition: background-color 0.05s;
 
+    font-size: 0.6em;
+    font-family: sans-serif;
+    font-weight: bold;
 }
 
 #StartNodeBuilder{
@@ -92,7 +113,7 @@
     background-color: rgb(65, 155, 5);
 }
 
-#ResetGrid{
+#ResetGridButton{
     background-color: rgb(177, 43, 10);
 }
 
@@ -112,13 +133,29 @@
     background-color: rgb(108, 255, 11);
 }
 
-#ResetGrid:hover{
+#ResetGridButton:hover{
     background-color: rgb(255, 83, 40);
 }
 
+#Algorithms{
+    margin-left: 5px;
+    border: 2px solid black;
+    display: inline-block;
+    font-weight: bold;
+    font-family: 'Times New Roman', Times, serif;
+    height: 25px;
+    margin-top: 37.5px;
+    transition: background-color 0.25s;
+    background-color: rgb(190, 190, 190);
+}
+
+#Algorithms:hover{
+    background-color: rgb(255, 255, 255);
+}
 
 .BuilderButtons{
     margin-left: 5px;
+    margin-top: 25px;
     width: 50px;
     height: 50px;
     border: 2px solid black;
@@ -126,17 +163,75 @@
     font-weight: bold;
     font-family: 'Times New Roman', Times, serif;
     transition: background-color 0.25s;
+    border-radius: 5px;
+}
+
+#Sliders{
+   padding-left: 15px;
+   font-weight: bold;
+   font-family: 'Times New Roman', Times, serif;
+   display: inline-block;
+   margin-bottom: 25px;
+}
+
+.Slider{
+    outline: none;
+    border: none;
+    all: unset;
+    height: 8px;
+    width: 100%;
+    box-shadow: 0px,50px,50px,0px,black;
+    background: linear-gradient(90deg, rgb(0, 153, 173), rgb(0, 153, 173));
+    border-radius: 15px;
+    transition: background 0.2s;
+}
+
+label{
+    padding: 5px;
+}
+
+.Slider:focus {
+    background: linear-gradient(90deg, rgb(0, 200, 200), rgb(0, 200, 200));
+}
+
+/* Change background color when the slider is active (dragged) */
+.Slider:active {
+    background: linear-gradient(90deg, rgb(0, 255, 255), rgb(0, 255, 255));
+}
+
+.Slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: rgb(0, 153, 173);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid black;
+    transition: background-color 0.25s;
+}
+
+.Slider::-webkit-slider-thumb:hover {
+    background: rgb(0, 200, 200);
+}
+
+.Slider::-webkit-slider-thumb:active {
+    background: rgb(0, 255, 255);
 }
 
 
-
+.Slider::-webkit-slider-runnable-track {
+    background: linear-gradient(90deg, rgb(0, 153, 173), rgb(0, 153, 173));
+    border-radius: 15px;
+}
 
 #buttons{
     display: flex;
     justify-content: center;
-    margin-top: 10px;
+    margin-bottom: 50px;
     margin-right: 250px;
 }
+
 
 #container {
     display: grid;

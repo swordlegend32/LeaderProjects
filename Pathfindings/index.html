@@ -17,8 +17,22 @@
         <button id="EndNodeBuilder" class="BuilderButtons">End</button>
         <button id="WallNodeBuilder" class="BuilderButtons">Wall</button>
         <button id="StartPathfinding" class="BuilderButtons">Start</button>
-        <button id="ResetGrid" class="BuilderButtons">Reset</button>
+        <button id="ResetGridButton" class="BuilderButtons">Reset</button>
+        <select name="Algorithms" id="Algorithms">
+            <option value="BreadthWidthSearch">BreadthWidthSearch</option>
+            <option value="A*">A*</option>
+            <option value="GreedyBestFirstSearch">GreedyBestFirstSearch</option>
+            <option value="Dijkstra">Dijkstra</option>
+        </select>
 
+        <div id="Sliders">
+            <label for="Speed">Speed</label>
+            <input class="Slider" type="range" id="Speed" name="Speed" min="1" max="100" value="50">
+            <label for="GridSize">GridSize</label>
+            <input class="Slider" type="range" id = "GridSize" name="GridSize" min="1" max="10" value="1">
+            
+        </div>
+        
     </div>
 
     <script src="Main.js"></script>
