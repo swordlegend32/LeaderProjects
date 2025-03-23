@@ -35,6 +35,17 @@ let PathfindingInProcess = false;
 
 let ChosenAlgorithm = "BreadthWidthSearch";
 
+function ResetCosts() {
+    for (let i = 0; i < Rows; i++) {
+        for (let j = 0; j < Columns; j++) {
+            let Cell = Grid[i][j]
+            Cell.HCost = 0;
+            Cell.GCost = 0;
+            Cell.FCost = 0;
+        }
+    }
+}
+
 function ResetGrid() {
     for (let i = 0; i < Rows; i++) {
         for (let j = 0; j < Columns; j++) {
@@ -69,7 +80,7 @@ function CreateGrid() {
         ElementGrid[i] = [];
         for (let j = 0; j < Columns; j++) {
 
-            Grid[i][j] = {Type: "Empty", x: i, y: j};
+            Grid[i][j] = {Type: "Empty", x: i, y: j, Fcost: 0, GCost: 0, HCost: 0, Parent: null};
             let GridCell = document.createElement("div");
 
             GridCell.textContent =  "";
@@ -208,6 +219,7 @@ async function BreadthWidthSearch() {
     }
 
     PathfindingInProcess = false;
+    ResetCosts();
 }
 
 
@@ -282,6 +294,7 @@ async function AStarSearch() {
                 PathNode = PathNode.Parent;
                 if (PathNode.Type === "Start") {
                     PathfindingInProcess = false;
+                    ResetCosts();
                     break;
                 }
                 let Element = document.getElementById(`${PathNode.x}/${PathNode.y}`);
@@ -312,14 +325,14 @@ async function AStarSearch() {
                 Neighbor["FCost"] = Neighbor.GCost + Neighbor.HCost;
                 Neighbor["Parent"] = CurrentNode;
 
+                Grid[Neighbor.x][Neighbor.y] = Neighbor;
+
                 if (!OpenList.includes(Neighbor)) {
                     OpenList.push(Neighbor);
                     let ElementCell = document.getElementById(`${Neighbor.x}/${Neighbor.y}`);
                     if (ElementCell && ElementCell.className == "GridCell") {
                         ElementCell.className = "QueueGridCell";
                         ElementCell.innerHTML = `${Neighbor.GCost} ${Neighbor.HCost} <br> ${Neighbor.FCost}`;
-                        // ElementCell.style.fontSize = "0.6em";
-                        // ElementCell.style.textAlign = "center";
                     }
                 }
             }
@@ -333,6 +346,7 @@ async function AStarSearch() {
         await new Promise(resolve => setTimeout(resolve, 5));
     }
     PathfindingInProcess = false;
+    ResetCosts();
 }
 
 
