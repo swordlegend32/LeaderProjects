@@ -3,7 +3,6 @@ const Container = document.getElementById('container');
 let Rows = 16;
 let Columns = 40;
 let Grid = [];
-let ElementGrid = [];
 
 const StartBuildButton = document.getElementById('StartNodeBuilder');
 StartBuildButton.addEventListener('click', PressStartBuildButton);
@@ -23,6 +22,14 @@ ResetGridButtonB.addEventListener('click', ResetGridButton);
 const PathfindingSelect = document.getElementById('Algorithms');
 PathfindingSelect.addEventListener('change', OptionChanged);
 
+const GridSizeSlider = document.getElementById('GridSize');
+GridSizeSlider.addEventListener('change', function() {
+    let value = GridSizeSlider.value / 2;
+    scale = Math.round(value / 0.5) * 0.5;
+    console.log(scale)
+    ResizeGrid()
+});
+
 let CurrentlyBuilding = null;
 
 let StartElement = null;
@@ -33,11 +40,13 @@ let EndNode = null;
 
 let PathfindingInProcess = false;
 
+let scale = 1;
+
 let ChosenAlgorithm = "BreadthWidthSearch";
 
 function ResetCosts() {
-    for (let i = 0; i < Rows; i++) {
-        for (let j = 0; j < Columns; j++) {
+    for (let i = 0; i < Rows * scale; i++) {
+        for (let j = 0; j < Columns * scale; j++) {
             let Cell = Grid[i][j]
             Cell.HCost = 0;
             Cell.GCost = 0;
@@ -47,8 +56,8 @@ function ResetCosts() {
 }
 
 function ResetGrid() {
-    for (let i = 0; i < Rows; i++) {
-        for (let j = 0; j < Columns; j++) {
+    for (let i = 0; i < Rows * scale; i++) {
+        for (let j = 0; j < Columns * scale; j++) {
             let Element = document.getElementById(`${i}/${j}`)
 
             if (Element === null || Element == undefined) {
@@ -63,22 +72,26 @@ function ResetGrid() {
 }
 
 function CreateGrid() {
-
+    if (PathfindingInProcess === true) {
+        alert("Pathfinding In Process, Please Wait");
+        return;
+    }
     StartNode = null;
     EndNode = null;
     StartElement = null;
     EndElement = null;
     PathfindingInProcess = false
 
+    Container.style.gridTemplateColumns  = `repeat(${Columns * scale}, 25px)`;
+    Container.style.gridTemplateRows = `repeat(${Rows * scale}, 25px)`;
 
     while (Container.firstChild) {
         Container.removeChild(Container.firstChild);
     }   
 
-    for (let i = 0; i < Rows; i++) {
+    for (let i = 0; i < Rows * scale; i++) {
         Grid[i] = [];
-        ElementGrid[i] = [];
-        for (let j = 0; j < Columns; j++) {
+        for (let j = 0; j < Columns * scale; j++) {
 
             Grid[i][j] = {Type: "Empty", x: i, y: j, Fcost: 0, GCost: 0, HCost: 0, Parent: null};
             let GridCell = document.createElement("div");
@@ -87,11 +100,65 @@ function CreateGrid() {
             GridCell.className = "GridCell";
             GridCell.id = `${i}/${j}`;
 
-            GridCell.style.gridRowStart = i + 1; 
-            GridCell.style.gridColumnStart = j + 1;
+            GridCell.style.width = `${Math.floor(25 / scale)}px`;
+            GridCell.style.height = `${Math.floor(25 / scale)}px`;
+            GridCell.style.border = `${Math.floor(2 / scale)}px solid black`;
+            GridCell.style.borderRadius = `${Math.floor(2 / scale)}px`;  
+
+            GridCell.style.gridRowstart = i + 1; 
+            GridCell.style.gridColumnstart = j + 1;
 
             Container.appendChild(GridCell);
-            ElementGrid[i][j] = GridCell;
+        }
+    }
+}
+
+function ResizeGrid() {
+    if (PathfindingInProcess === true) {
+        alert("Pathfinding In Process, Please Wait");
+        return;
+    }
+
+    StartNode = null;
+    EndNode = null;
+    StartElement = null;
+    EndElement = null;
+    PathfindingInProcess = false;
+
+    Container.style.gridTemplateColumns = `repeat(${Columns * scale}, ${Math.floor(25 / scale)}px)`;
+    Container.style.gridTemplateRows = `repeat(${Rows * scale}, ${Math.floor(25 / scale)}px)`;
+
+    while (Container.firstChild) {
+        Container.removeChild(Container.firstChild);
+    }
+
+    for (let i = 0; i < Rows * scale; i++) {
+        if (!Grid[i]) {
+            Grid[i] = [];
+        }
+
+        for (let j = 0; j < Columns * scale; j++) {
+            if (!Grid[i][j]) {
+                Grid[i][j] = {
+                    Type: "Empty",
+                    x: i,
+                    y: j,
+                    FCost: 0,
+                    GCost: 0,
+                    HCost: 0,
+                    Parent: null,
+                };
+            }
+
+            const GridCell = document.createElement("div");
+            GridCell.className = "GridCell";
+            GridCell.id = `${i}/${j}`;
+
+            GridCell.style.width = `${Math.floor(25 / scale)}px`;
+            GridCell.style.height = `${Math.floor(25 / scale)}px`;
+            GridCell.style.border = `${Math.floor(2 / scale)}px solid black`;
+
+            Container.appendChild(GridCell);
         }
     }
 }
@@ -106,7 +173,7 @@ function GetNeighbors(Node) {
         let NewX = Node.x + XVector[i];
         let NewY = Node.y + YVector[i];
 
-        if (NewX >= 0 && NewX < Rows && NewY >= 0 && NewY < Columns) {
+        if (NewX >= 0 && NewX < Rows * scale && NewY >= 0 && NewY < Columns * scale) {
             let Neighbor = Grid[NewX][NewY];
             if (!Neighbor) {
                 console.error(`Invalid Neighbor at (${NewX}, ${NewY})`);
@@ -118,17 +185,7 @@ function GetNeighbors(Node) {
         }
     }
     return Neighbors;
-}
-
-
-function sleep(milliseconds) {
-    var start = new Date().getTime();
-    for (var i = 0; i < 1e7; i++) {
-      if ((new Date().getTime() - start) > milliseconds){
-        break;
-      }
-    }
-}
+}   
 
 async function BreadthWidthSearch() {
     if (StartNode == null || EndNode == null) {
@@ -141,40 +198,38 @@ async function BreadthWidthSearch() {
         return;
     }
 
-
     ResetGrid();
     PathfindingInProcess = true;
-
 
     let OpenList = [];
     let ClosedList = [];
 
+    StartNode["GCost"] = 0;  // Initialize GCost for the Start Node
     OpenList.push(StartNode);
 
     while (OpenList.length > 0) {
         let CurrentNode = OpenList.shift();
 
         if (CurrentNode.x === EndNode.x && CurrentNode.y === EndNode.y) {
-
-            for (let i = 0; i < ClosedList.length; i ++) {
-                let CurrentGridCell = ClosedList[i]
+            for (let i = 0; i < ClosedList.length; i++) {
+                let CurrentGridCell = ClosedList[i];
                 let ElementCell = document.getElementById(`${CurrentGridCell.x}/${CurrentGridCell.y}`);
-                if (ElementCell && ElementCell.className == "SearchedGridCell" || ElementCell.className == "QueueGridCell" || ElementCell.className == "PathGridCell") {
+                if (ElementCell && (ElementCell.className == "SearchedGridCell" || ElementCell.className == "QueueGridCell" || ElementCell.className == "PathGridCell")) {
                     ElementCell.className = "GridCell";
                 }
             }
 
-            for (let i = 0; i < OpenList.length; i ++) {
-                let CurrentGridCell = OpenList[i]
+            for (let i = 0; i < OpenList.length; i++) {
+                let CurrentGridCell = OpenList[i];
                 let ElementCell = document.getElementById(`${CurrentGridCell.x}/${CurrentGridCell.y}`);
-                if (ElementCell && ElementCell.className == "SearchedGridCell" || ElementCell.className == "QueueGridCell" || ElementCell.className == "PathGridCell") {
+                if (ElementCell && (ElementCell.className == "SearchedGridCell" || ElementCell.className == "QueueGridCell" || ElementCell.className == "PathGridCell")) {
                     ElementCell.className = "GridCell";
                 }
             }
 
-            let PathNode = CurrentNode
+            let PathNode = CurrentNode;
             while (PathNode.Parent != null) {
-                PathNode = PathNode.Parent
+                PathNode = PathNode.Parent;
                 if (PathNode.Type === "Start") {
                     break;
                 }
@@ -190,30 +245,41 @@ async function BreadthWidthSearch() {
         for (let i = 0; i < Neighbors.length; i++) {
             let Neighbor = Neighbors[i];
 
-            if (ClosedList.includes(Neighbor) || OpenList.includes(Neighbor)) {
+            if (ClosedList.includes(Neighbor) || Neighbor.Type === "Wall") {
                 continue;
             }
 
-            if (Neighbor.Type === "Wall" || Neighbor.Type === "Start") { 
-                continue;
+            if (OpenList.includes(Neighbor)) {
+                Neighbor = OpenList[OpenList.indexOf(Neighbor)];
             }
 
-            Neighbor["Parent"] = CurrentNode;
+            let NewGCost = CurrentNode.GCost + 1;
 
-            OpenList.push(Neighbor);
+            if (!OpenList.includes(Neighbor) || NewGCost < Neighbor.GCost) {
+                Neighbor["GCost"] = NewGCost;
+                Neighbor["Parent"] = CurrentNode;
 
-            let ElementCell = document.getElementById(`${Neighbor.x}/${Neighbor.y}`);
-            if (ElementCell && ElementCell.className == "GridCell") {
-                ElementCell.className = "QueueGridCell";
+             
+                if (!OpenList.includes(Neighbor)) {
+                    OpenList.push(Neighbor);
+
+                    if(Neighbor.Type == "Finish") {
+                        break;
+                    }    
+
+                    let ElementCell = document.getElementById(`${Neighbor.x}/${Neighbor.y}`);
+                    if (ElementCell && ElementCell.className == "GridCell") {
+                        ElementCell.className = "QueueGridCell";
+                    }
+                }
             }
-
         }
+
         ClosedList.push(CurrentNode);
         let currentElement = document.getElementById(`${CurrentNode.x}/${CurrentNode.y}`);
         if (currentElement && currentElement.className == "QueueGridCell") {
             currentElement.className = "SearchedGridCell";
         }
-           
 
         await new Promise(resolve => setTimeout(resolve, 5));
     }
@@ -221,9 +287,6 @@ async function BreadthWidthSearch() {
     PathfindingInProcess = false;
     ResetCosts();
 }
-
-
-
 
 async function AStarSearch() {
 
@@ -313,6 +376,10 @@ async function AStarSearch() {
         for (let i = 0; i < Neighbors.length; i++) {
             let Neighbor = Neighbors[i];
 
+            if(OpenList.includes(Neighbor) ){
+                Neighbor = OpenList[OpenList.indexOf(Neighbor)];
+            }
+
             if (ClosedList.includes(Neighbor) || Neighbor.Type === "Wall") {
                 continue;
             }
@@ -329,6 +396,10 @@ async function AStarSearch() {
 
                 if (!OpenList.includes(Neighbor)) {
                     OpenList.push(Neighbor);
+
+                    if(Neighbor.Type == "Finish") {
+                        break;
+                    }    
                     let ElementCell = document.getElementById(`${Neighbor.x}/${Neighbor.y}`);
                     if (ElementCell && ElementCell.className == "GridCell") {
                         ElementCell.className = "QueueGridCell";
@@ -348,7 +419,6 @@ async function AStarSearch() {
     PathfindingInProcess = false;
     ResetCosts();
 }
-
 
 function PressStartBuildButton() {
     CurrentlyBuilding = "Start";

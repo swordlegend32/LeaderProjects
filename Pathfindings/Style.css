@@ -36,7 +36,7 @@
     font-weight: bold;
     font-family: sans-serif;
     text-align: center;
-    font-size: 1.25em;
+    font-size: 1em;
     background-color: green;
     transition: background-color 0.25s;
     border-radius: 2px;
@@ -50,7 +50,7 @@
     font-weight: bold;
     font-family: sans-serif;     
     text-align: center;
-    font-size: 1.25em;
+    font-size: 1em;
     background-color: rgb(0, 153, 173);
     transition: background-color 0.25s;
     border-radius: 2px;
