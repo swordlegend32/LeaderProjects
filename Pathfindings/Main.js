@@ -392,6 +392,114 @@ async function DFSMaze() {
 
 }
 
+function GetRandomNode() {
+    let X = Math.random * (Rows * scale);
+    let Y = Math.random * (Columns * scale);
+    return Grid[X][Y]
+}
+
+async function PrimsMaze() {
+    ResizeGrid();
+    let stack = [];
+    let Frontier = [];
+    
+
+    for (let i = 0; i < Rows * scale; i++) {
+
+        if (!Grid[i]) {
+            Grid[i] = [];
+        }
+
+        for (let j = 0; j < Columns * scale; j++) {
+
+            if (!Grid[i][j]) {
+                Grid[i][j] = {
+                    Type: "Wall",
+                    x: i,
+                    y: j,
+                    FCost: 0,
+                    GCost: 0,
+                    HCost: 0,
+                    Parent: null,
+                };
+
+                const GridCell = document.createElement("div");
+                GridCell.className = "GridCell";
+                GridCell.id = `${i}/${j}`;
+
+                GridCell.style.width = `${25}px`;
+                GridCell.style.height = `${25}px`;
+                GridCell.style.border = `${2}px solid black`;
+
+                Container.appendChild(GridCell);
+
+            }
+
+            Grid[i][j].Type = "Wall";
+            let Element = document.getElementById(`${i}/${j}`);
+            if (Element) Element.className = "OcupiedGridCell";
+        }
+    }
+
+    let startNode = GetRandomNode();
+
+    let startX = startNode.x;
+    let startY = startNode.y;
+
+    startNode.Type = "Empty";
+    let startElement = document.getElementById(`${startX}/${startY}`);
+    if (startElement) startElement.className = "GridCell";
+
+    stack.push(startNode);
+
+    StartNode = Grid[startX][startY];
+    StartNode.Type = "Start";
+
+    startElement = document.getElementById(`${startX}/${startY}`);
+    if (startElement) startElement.className = "StartGridCell"; startElement.textContent = "A"
+
+    while (stack.length > 0) {
+        let current = stack[stack.length - 1];
+        let neighbors = GetMazeNeighbors(current);
+
+        if (neighbors.length > 0) {
+            let next = neighbors[Math.floor(Math.random() * neighbors.length)];
+            let wallX = (current.x + next.x) / 2;
+            let wallY = (current.y + next.y) / 2;
+
+            Grid[wallX][wallY].Type = "Empty";
+            let wallElement = document.getElementById(`${wallX}/${wallY}`);
+            if (wallElement) wallElement.className = "GridCell";
+
+            next.Type = "Empty";
+            let nextElement = document.getElementById(`${next.x}/${next.y}`);
+            if (nextElement) nextElement.className = "GridCell";
+
+            stack.push(next);
+        } else {
+            stack.pop();
+        }
+
+        const WaitTime = calculateWaitTime(Speed);
+        if (WaitTime > 1) {
+            for (let i = 0; i < WaitTime; i++) {
+                if (SkipWait) {
+                    SkipWait = false;
+                    break;
+                }
+                await new Promise(resolve => setTimeout(resolve, 1));
+                }
+            }      
+    }
+
+  
+    EndNode = Grid[EndX][EndY];
+    EndNode.Type = "Finish";
+    let endElement = document.getElementById(`${EndX}/${EndY}`);  
+ 
+    if (endElement) endElement.className = "FinishGridCell";  endElement.textContent = "B";
+}
+
 async function BreadthWidthSearch() {
     if (StartNode == null || EndNode == null) {
         alert("Please select a start and end node");
@@ -619,6 +727,30 @@ async function GreedyBestFirstSearch() {
     }
     PathfindingInProcess = false;
     ResetCosts();
+}
+
+async function VectorField() {
+    if (EndNode == null) {
+        alert("Please select a start and end node");
+        return;
+    }
+
+    if (PathfindingInProcess === true) {
+        alert("Pathfinding Already In Process");
+        return;
+    };
+
+    OpenList = [];
+    ClosedList = [];
+
+    OpenList.push(EndNode);
+
+    while (OpenList.length < 0 ) {
+        const CurrentNode = OpenList.shift() 
+        Neigbours = GetNeighbors()
+
+        const WaitTime = calculateWaitTime(Speed);
+    }
 }
 
 function calculateWaitTime(Speed) {
