@@ -1,7 +1,7 @@
 
 const Container = document.getElementById('container');
-let Rows = 16;
-let Columns = 40;
+let Rows = 5;
+let Columns = 5;
 let Grid = [];
 
 
@@ -17,6 +17,10 @@ WallBuildButton.addEventListener('click', PressWallBuildButton);
 const StartPathfinding = document.getElementById('StartPathfinding');
 StartPathfinding.addEventListener('click', StartPathfindingButton);
 
+const StartGeneratingMaze = document.getElementById('StartMazeGen');
+StartGeneratingMaze.addEventListener('click', StartMazeGeneration);
+
+
 const ResetGridButtonB = document.getElementById('ResetGridButton');
 ResetGridButtonB.addEventListener('click', ResetGridButton);
 
@@ -25,8 +29,8 @@ PathfindingSelect.addEventListener('change', OptionChanged);
 
 const GridSizeSlider = document.getElementById('GridSize');
 GridSizeSlider.addEventListener('change', function() {
-    let value = GridSizeSlider.value / 2;
-    scale = Math.round(value / 0.5) * 0.5;
+    let value = GridSizeSlider.value ;
+    scale = value
     console.log(scale)
     ResizeGrid()
 });
@@ -48,7 +52,7 @@ let EndNode = null;
 let PathfindingInProcess = false;
 
 let scale = 1;
-let Speed = 1;
+let Speed = 50;
 
 let SkipWait = false;
 
@@ -56,8 +60,8 @@ function lerp(a, b, n) {
     return (1 - n) * a + n * b;
 }
 
-
 let ChosenAlgorithm = "BreadthWidthSearch";
+let ChosenMazeAlgorithm = "DFSMaze";
 
 function ResetCosts() {
     for (let i = 0; i < Rows * scale; i++) {
@@ -97,6 +101,9 @@ function CreateGrid() {
     EndElement = null;
     PathfindingInProcess = false
 
+    if ((Rows * scale) % 2 === 0) Rows++;
+    if ((Columns * scale) % 2 === 0) Columns++;
+
     Container.style.gridTemplateColumns  = `repeat(${Columns * scale}, 25px)`;
     Container.style.gridTemplateRows = `repeat(${Rows * scale}, 25px)`;
 
@@ -115,10 +122,9 @@ function CreateGrid() {
             GridCell.className = "GridCell";
             GridCell.id = `${i}/${j}`;
 
-            GridCell.style.width = `${Math.floor(25 / scale)}px`;
-            GridCell.style.height = `${Math.floor(25 / scale)}px`;
-            GridCell.style.border = `${Math.floor(2 / scale)}px solid black`;
-            GridCell.style.borderRadius = `${Math.floor(2 / scale)}px`;  
+            GridCell.style.width = `${25}px`;
+            GridCell.style.height = `${25}px`;
+            GridCell.style.border = `${2}px solid black`;
 
             GridCell.style.gridRowstart = i + 1; 
             GridCell.style.gridColumnstart = j + 1;
@@ -134,14 +140,17 @@ function ResizeGrid() {
         return;
     }
 
+    Container.style.height = `${Rows * scale * 25}px`;
+    Container.style.width = `${Columns * scale * 25}px`;
+
     StartNode = null;
     EndNode = null;
     StartElement = null;
     EndElement = null;
     PathfindingInProcess = false;
 
-    Container.style.gridTemplateColumns = `repeat(${Columns * scale}, ${Math.floor(25 / scale)}px)`;
-    Container.style.gridTemplateRows = `repeat(${Rows * scale}, ${Math.floor(25 / scale)}px)`;
+    Container.style.gridTemplateColumns = `repeat(${Columns * scale}, ${25}px)`;
+    Container.style.gridTemplateRows = `repeat(${Rows * scale}, ${25}px)`;
 
     while (Container.firstChild) {
         Container.removeChild(Container.firstChild);
@@ -169,9 +178,9 @@ function ResizeGrid() {
             GridCell.className = "GridCell";
             GridCell.id = `${i}/${j}`;
 
-            GridCell.style.width = `${Math.floor(25 / scale)}px`;
-            GridCell.style.height = `${Math.floor(25 / scale)}px`;
-            GridCell.style.border = `${Math.floor(2 / scale)}px solid black`;
+            GridCell.style.width = `${25}px`;
+            GridCell.style.height = `${25}px`;
+            GridCell.style.border = `${2}px solid black`;
 
             Container.appendChild(GridCell);
         }
@@ -202,6 +211,187 @@ function GetNeighbors(Node) {
     return Neighbors;
 }   
 
+function GetMazeNeighbors(node) {
+    const directions = [
+        { dx: 0, dy: -2 }, 
+        { dx: 0, dy: 2 }, 
+        { dx: -2, dy: 0 },
+        { dx: 2, dy: 0 } 
+    ];
+    let neighbors = [];
+
+    for (let dir of directions) {
+        let newX = node.x + dir.dx;
+        let newY = node.y + dir.dy;
+
+        if (newX >= 0 && newX < Rows * scale && newY >= 0 && newY < (Columns * scale)) {
+            if (Grid[newX][newY].Type === "Wall" ) {
+                neighbors.push(Grid[newX][newY]);
+            }
+        }
+    }
+
+    return neighbors;
+}
+
+function GreedySearchNeigbour(node) {
+    const directions = [
+        { dx: 0, dy: -1 }, 
+        { dx: 0, dy: 1 }, 
+        { dx: -1, dy: 0 },
+        { dx: 1, dy: 0 } 
+    ];
+
+    let Neighbours = [];
+    let CurHCost = Math.abs(EndNode.x - node.x) + Math.abs(EndNode.y - node.y);
+
+    for (let dir of directions) {
+        let newX = node.x + dir.dx;
+        let newY = node.y + dir.dy;
+
+        if (newX >= 0 && newX < Rows * scale && newY >= 0 && newY < Columns * scale) {
+            const NewHCost = Math.abs(EndNode.x - newX) + Math.abs(EndNode.y - newY);
+            if (
+                Grid[newX][newY].Type !== "Wall" &&
+                Grid[newX][newY].Type !== "Start" &&
+                NewHCost < CurHCost
+            ) {
+                Neighbours.push(Grid[newX][newY]);
+            }
+        }
+    }
+
+    if (Neighbours.length < 3) {
+        for (let dir of directions) {
+            let newX = node.x + dir.dx;
+            let newY = node.y + dir.dy;
+
+            if (newX >= 0 && newX < Rows * scale && newY >= 0 && newY < Columns * scale) {
+                if (
+                    Grid[newX][newY].Type !== "Wall" &&
+                    Grid[newX][newY].Type !== "Start" &&
+                    !Neighbours.includes(Grid[newX][newY])
+                ) {
+                    Neighbours.push(Grid[newX][newY]);
+                }
+            }
+        }
+    }
+
+    Neighbours.sort((a, b) => {
+        return a.HCost - b.HCost;
+    });
+
+    return Neighbours;
+}
+
+function GetOppositeEdge(x, y) {
+    let OppositeX = Rows - x - 1;
+    let OppositeY = Columns - y - 1;
+    return { x: OppositeX, y: OppositeY };
+}
+
+async function DFSMaze() {
+    ResizeGrid();
+
+    let stack = [];
+    let startX = 1;
+    let startY = 1;
+
+    let EndX = (Rows * scale) - 3;
+    let EndY = (Columns * scale) - 3;
+
+    for (let i = 0; i < Rows * scale; i++) {
+        if (!Grid[i]) {
+            Grid[i] = [];
+        }
+        for (let j = 0; j < Columns * scale; j++) {
+
+            if (!Grid[i][j]) {
+                Grid[i][j] = {
+                    Type: "Wall",
+                    x: i,
+                    y: j,
+                    FCost: 0,
+                    GCost: 0,
+                    HCost: 0,
+                    Parent: null,
+                };
+
+                const GridCell = document.createElement("div");
+                GridCell.className = "GridCell";
+                GridCell.id = `${i}/${j}`;
+
+                GridCell.style.width = `${25}px`;
+                GridCell.style.height = `${25}px`;
+                GridCell.style.border = `${2}px solid black`;
+
+                Container.appendChild(GridCell);
+
+            }
+
+            Grid[i][j].Type = "Wall";
+            let Element = document.getElementById(`${i}/${j}`);
+            if (Element) Element.className = "OcupiedGridCell";
+        }
+    }
+
+    let startNode = Grid[startX][startY];
+    startNode.Type = "Empty";
+    let startElement = document.getElementById(`${startX}/${startY}`);
+    if (startElement) startElement.className = "GridCell";
+
+    stack.push(startNode);
+
+    StartNode = Grid[startX][startY];
+    StartNode.Type = "Start";
+
+    startElement = document.getElementById(`${startX}/${startY}`);
+    if (startElement) startElement.className = "StartGridCell"; startElement.textContent = "A"
+
+    while (stack.length > 0) {
+        let current = stack[stack.length - 1];
+        let neighbors = GetMazeNeighbors(current);
+
+        if (neighbors.length > 0) {
+            let next = neighbors[Math.floor(Math.random() * neighbors.length)];
+            let wallX = (current.x + next.x) / 2;
+            let wallY = (current.y + next.y) / 2;
+
+            Grid[wallX][wallY].Type = "Empty";
+            let wallElement = document.getElementById(`${wallX}/${wallY}`);
+            if (wallElement) wallElement.className = "GridCell";
+
+            next.Type = "Empty";
+            let nextElement = document.getElementById(`${next.x}/${next.y}`);
+            if (nextElement) nextElement.className = "GridCell";
+
+            stack.push(next);
+        } else {
+            stack.pop();
+        }
+
+        const WaitTime = calculateWaitTime(Speed);
+        if (WaitTime > 1) {
+            for (let i = 0; i < WaitTime; i++) {
+                if (SkipWait) {
+                    SkipWait = false;
+                    break;
+                }
+                await new Promise(resolve => setTimeout(resolve, 1));
+                }
+            }      
+    }
+
+  
+    EndNode = Grid[EndX][EndY];
+    EndNode.Type = "Finish";
+    let endElement = document.getElementById(`${EndX}/${EndY}`);  
+ 
+    if (endElement) endElement.className = "FinishGridCell";  endElement.textContent = "B";
+
+}
+
 async function BreadthWidthSearch() {
     if (StartNode == null || EndNode == null) {
         alert("Please select a start and end node");
@@ -219,11 +409,13 @@ async function BreadthWidthSearch() {
     let OpenList = [];
     let ClosedList = [];
 
-    StartNode["GCost"] = 0;  // Initialize GCost for the Start Node
+    StartNode["GCost"] = 0;  
     OpenList.push(StartNode);
 
     while (OpenList.length > 0) {
         let CurrentNode = OpenList.shift();
+
+        const WaitTime = calculateWaitTime(Speed);
 
         if (CurrentNode.x === EndNode.x && CurrentNode.y === EndNode.y) {
             for (let i = 0; i < ClosedList.length; i++) {
@@ -250,7 +442,14 @@ async function BreadthWidthSearch() {
                 }
                 let Element = document.getElementById(`${PathNode.x}/${PathNode.y}`);
                 Element.className = "PathGridCell";
-                await new Promise(resolve => setTimeout(resolve, 50));
+
+                const WaitTime = Math.floor(10 / scale);
+
+                if ( WaitTime > 1) {
+                    await new Promise(resolve => setTimeout(resolve, WaitTime));
+                }
+
+               
             }
             PathfindingInProcess = true;
             break;
@@ -283,7 +482,7 @@ async function BreadthWidthSearch() {
                     }    
 
                     let ElementCell = document.getElementById(`${Neighbor.x}/${Neighbor.y}`);
-                    if (ElementCell && ElementCell.className == "GridCell") {
+                    if (ElementCell && ElementCell.className == "GridCell" && !SkipWait && WaitTime > 1) {
                         ElementCell.className = "QueueGridCell";
                     }
                 }
@@ -292,11 +491,11 @@ async function BreadthWidthSearch() {
 
         ClosedList.push(CurrentNode);
         let currentElement = document.getElementById(`${CurrentNode.x}/${CurrentNode.y}`);
-        if (currentElement && currentElement.className == "QueueGridCell") {
+        if (currentElement && currentElement.className == "QueueGridCell" && !SkipWait && WaitTime > 1) {
             currentElement.className = "SearchedGridCell";
         }
 
-        const WaitTime = calculateWaitTime(Speed);
+       
         if (WaitTime > 1) {
             for (let i = 0; i < WaitTime; i++) {
                 if (SkipWait) {
@@ -312,6 +511,116 @@ async function BreadthWidthSearch() {
     ResetCosts();
 }
 
+async function GreedyBestFirstSearch() {
+    if (StartNode == null || EndNode == null) {
+        alert("Please select a start and end node");
+        return;
+    }
+
+    if (PathfindingInProcess === true) {
+        alert("Pathfinding Already In Process");
+        return;
+    }
+
+    ResetGrid();
+    PathfindingInProcess = true;
+
+    let OpenList = [];
+    let ClosedList = [];
+
+    StartNode["GCost"] = 0;  
+    OpenList.push(StartNode);
+
+    while (OpenList.length > 0) {
+        let CurrentNode = OpenList.shift();
+
+        const WaitTime = calculateWaitTime(Speed);
+
+        if (CurrentNode.x === EndNode.x && CurrentNode.y === EndNode.y) {
+            for (let i = 0; i < ClosedList.length; i++) {
+                let CurrentGridCell = ClosedList[i];
+                let ElementCell = document.getElementById(`${CurrentGridCell.x}/${CurrentGridCell.y}`);
+                if (ElementCell && (ElementCell.className == "SearchedGridCell" || ElementCell.className == "QueueGridCell" || ElementCell.className == "PathGridCell")) {
+                    ElementCell.className = "GridCell";
+                }
+            }
+
+            for (let i = 0; i < OpenList.length; i++) {
+                let CurrentGridCell = OpenList[i];
+                let ElementCell = document.getElementById(`${CurrentGridCell.x}/${CurrentGridCell.y}`);
+                if (ElementCell && (ElementCell.className == "SearchedGridCell" || ElementCell.className == "QueueGridCell" || ElementCell.className == "PathGridCell")) {
+                    ElementCell.className = "GridCell";
+                }
+            }
+
+            let PathNode = CurrentNode;
+            while (PathNode.Parent != null) {
+                PathNode = PathNode.Parent;
+                if (PathNode.Type === "Start") {
+                    break;
+                }
+                let Element = document.getElementById(`${PathNode.x}/${PathNode.y}`);
+                Element.className = "PathGridCell";
+
+                const WaitTime = Math.floor(10 / scale);
+
+                if ( WaitTime > 1) {
+                    await new Promise(resolve => setTimeout(resolve, WaitTime));
+                }
+
+               
+            }
+            PathfindingInProcess = true;
+            break;
+        }
+
+        let Neighbors = GreedySearchNeigbour(CurrentNode);
+        for (let i = 0; i < Neighbors.length; i++) {
+            let Neighbor = Neighbors[i];
+        
+            if (ClosedList.includes(Neighbor) || Neighbor.Type === "Wall") {
+                continue;
+            }
+        
+            if (OpenList.includes(Neighbor)) {
+                Neighbor = OpenList[OpenList.indexOf(Neighbor)];
+            }
+        
+            let NewGCost = CurrentNode.GCost + 1;
+        
+            if (!OpenList.includes(Neighbor) || NewGCost < Neighbor.GCost) {
+                Neighbor["GCost"] = NewGCost;
+                Neighbor["Parent"] = CurrentNode;
+        
+                if (!OpenList.includes(Neighbor)) {
+                    OpenList.push(Neighbor);
+        
+                    let ElementCell = document.getElementById(`${Neighbor.x}/${Neighbor.y}`);
+                    if (ElementCell && ElementCell.className == "GridCell") {
+                        ElementCell.className = "QueueGridCell";
+                    }
+                }
+            }
+        }
+        ClosedList.push(CurrentNode);
+        let currentElement = document.getElementById(`${CurrentNode.x}/${CurrentNode.y}`);
+        if (currentElement && currentElement.className == "QueueGridCell" && !SkipWait && WaitTime > 1) {
+            currentElement.className = "SearchedGridCell";
+        }
+        if (WaitTime > 1) {
+            for (let i = 0; i < WaitTime; i++) {
+                if (SkipWait) {
+                    SkipWait = false;
+                    break;
+                }
+                await new Promise(resolve => setTimeout(resolve, 1));
+            }
+        }
+    }
+    PathfindingInProcess = false;
+    ResetCosts();
+}
+
 function calculateWaitTime(Speed) {
     if (Speed >= 100) {
         return 0;
@@ -320,7 +629,7 @@ function calculateWaitTime(Speed) {
         return 50000;
     }
 
-    const maxWaitTime = 100;
+    const maxWaitTime = 25;
     const minWaitTime = 0; 
 
    return lerp(maxWaitTime, minWaitTime, Speed / 100);
@@ -370,14 +679,15 @@ async function AStarSearch() {
     while (OpenList.length > 0) {
         let CurrentNode = GetLowestFCostNode();
 
-        if (CurrentNode.x === EndNode.x && CurrentNode.y === EndNode.y) {
+        const WaitTime = calculateWaitTime(Speed);
 
+        if (CurrentNode.x === EndNode.x && CurrentNode.y === EndNode.y) {
             for (let i = 0; i < ClosedList.length; i++) {
                 let CurrentGridCell = ClosedList[i];
                 let ElementCell = document.getElementById(`${CurrentGridCell.x}/${CurrentGridCell.y}`);
                 if (ElementCell && (ElementCell.className == "SearchedGridCell" || ElementCell.className == "QueueGridCell" || ElementCell.className == "PathGridCell")) {
                     ElementCell.className = "GridCell";
-                    ElementCell.textContent = "";
+                    ElementCell.textContent = ""
                 }
             }
 
@@ -386,7 +696,8 @@ async function AStarSearch() {
                 let ElementCell = document.getElementById(`${CurrentGridCell.x}/${CurrentGridCell.y}`);
                 if (ElementCell && (ElementCell.className == "SearchedGridCell" || ElementCell.className == "QueueGridCell" || ElementCell.className == "PathGridCell")) {
                     ElementCell.className = "GridCell";
-                    ElementCell.textContent = "";
+                    ElementCell.textContent = ""
+
                 }
             }
 
@@ -394,16 +705,22 @@ async function AStarSearch() {
             while (PathNode.Parent != null) {
                 PathNode = PathNode.Parent;
                 if (PathNode.Type === "Start") {
-                    PathfindingInProcess = false;
-                    ResetCosts();
                     break;
                 }
                 let Element = document.getElementById(`${PathNode.x}/${PathNode.y}`);
                 Element.className = "PathGridCell";
-                Element.textContent = "";
-                await new Promise(resolve => setTimeout(resolve, 25));
+                Element.textContent = ""
+
+                const WaitTime = Math.floor(10 / scale);
+
+                if ( WaitTime > 1) {
+                    await new Promise(resolve => setTimeout(resolve, WaitTime));
+                }
+
+               
             }
-            return;
+            PathfindingInProcess = true;
+            break;
         }
 
         OpenList.splice(OpenList.indexOf(CurrentNode), 1);
@@ -452,8 +769,6 @@ async function AStarSearch() {
             CurrentElement.className = "SearchedGridCell";
         }
 
-        const WaitTime = calculateWaitTime(Speed);
-
         if (WaitTime > 1) {
             for (let i = 0; i < WaitTime; i++) {
                 if (SkipWait) {
@@ -485,11 +800,21 @@ function StartPathfindingButton() {
         BreadthWidthSearch();
     } else if (ChosenAlgorithm === "A*") {
         AStarSearch()
+    } else if (ChosenAlgorithm == "GreedyBestFirstSearch") {
+        GreedyBestFirstSearch();
     }
     else {
         alert("Algorithm Not Yet Implemented");
     }
    
+}
+
+function StartMazeGeneration() {
+    if (ChosenMazeAlgorithm === "DFSMaze") {
+        DFSMaze();
+    } else {
+        alert("Maze Algorithm Not Yet Implemented");
+    }
 }
 
 function ResetGridButton() {
@@ -498,6 +823,10 @@ function ResetGridButton() {
 
 function OptionChanged() {
     ChosenAlgorithm = PathfindingSelect.value;
+}
+
+function OptionChangedMaze() {
+    ChosenMazeAlgorithm = MazeSelect.value;
 }
 
 Container.addEventListener('click', function(event) {

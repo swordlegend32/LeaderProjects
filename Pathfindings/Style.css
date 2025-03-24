@@ -117,6 +117,16 @@
     background-color: rgb(177, 43, 10);
 }
 
+#StartMazeGen{
+    background-color: rgb(66, 173, 33);
+    width: 15%;
+}
+
+#StartMazeGen:hover{
+    background-color: rgb(60, 255, 0);
+    width: 15%;
+}
+
 #EndNodeBuilder:hover{
     background-color: rgb(2, 205, 231);
 }
@@ -144,7 +154,20 @@
     font-weight: bold;
     font-family: 'Times New Roman', Times, serif;
     height: 25px;
-    margin-top: 37.5px;
+    margin-top: 37px;
+    transition: background-color 0.25s;
+    background-color: rgb(190, 190, 190);
+}
+
+#MazeAlgorithms{
+    margin-left: 10px;
+    border: 2px solid black;
+    display: inline-block;
+    font-weight: bold;
+    font-family: 'Times New Roman', Times, serif;
+    height: 25px;
+    margin-top: 37px;
+    width: 170px;
     transition: background-color 0.25s;
     background-color: rgb(190, 190, 190);
 }
@@ -234,9 +257,9 @@ label{
 
 
 #container {
-    display: grid;
-    grid-template-columns: repeat(40, 25px);
-    grid-template-rows: repeat(16, 25px);
+    display: inline-grid;
+    grid-template-columns: repeat(16, 25px);
+    grid-template-rows: repeat(5, 25px);
     margin: 50px;
 }
 
