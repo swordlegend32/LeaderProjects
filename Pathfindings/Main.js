@@ -237,56 +237,56 @@ function GetMazeNeighbors(node) {
     return neighbors;
 }
 
-function GreedySearchNeigbour(node) {
-    const directions = [
-        { dx: 0, dy: -1 }, 
-        { dx: 0, dy: 1 }, 
-        { dx: -1, dy: 0 },
-        { dx: 1, dy: 0 } 
-    ];
+// function GreedySearchNeigbour(node) {
+//     const directions = [
+//         { dx: 0, dy: -1 }, 
+//         { dx: 0, dy: 1 }, 
+//         { dx: -1, dy: 0 },
+//         { dx: 1, dy: 0 } 
+//     ];
 
-    let Neighbours = [];
-    let CurHCost = Math.abs(EndNode.x - node.x) + Math.abs(EndNode.y - node.y);
+//     let Neighbours = [];
+//     let CurHCost = Math.abs(EndNode.x - node.x) + Math.abs(EndNode.y - node.y);
 
-    for (let dir of directions) {
-        let newX = node.x + dir.dx;
-        let newY = node.y + dir.dy;
+//     for (let dir of directions) {
+//         let newX = node.x + dir.dx;
+//         let newY = node.y + dir.dy;
 
-        if (newX >= 0 && newX < Rows * scale && newY >= 0 && newY < Columns * scale) {
-            const NewHCost = Math.abs(EndNode.x - newX) + Math.abs(EndNode.y - newY);
-            if (
-                Grid[newX][newY].Type !== "Wall" &&
-                Grid[newX][newY].Type !== "Start" &&
-                NewHCost < CurHCost
-            ) {
-                Neighbours.push(Grid[newX][newY]);
-            }
-        }
-    }
+//         if (newX >= 0 && newX < Rows * scale && newY >= 0 && newY < Columns * scale) {
+//             const NewHCost = Math.abs(EndNode.x - newX) + Math.abs(EndNode.y - newY);
+//             if (
+//                 Grid[newX][newY].Type !== "Wall" &&
+//                 Grid[newX][newY].Type !== "Start" &&
+//                 NewHCost < CurHCost
+//             ) {
+//                 Neighbours.push(Grid[newX][newY]);
+//             }
+//         }
+//     }
 
-    if (Neighbours.length < 3) {
-        for (let dir of directions) {
-            let newX = node.x + dir.dx;
-            let newY = node.y + dir.dy;
+//     if (Neighbours.length < 3) {
+//         for (let dir of directions) {
+//             let newX = node.x + dir.dx;
+//             let newY = node.y + dir.dy;
 
-            if (newX >= 0 && newX < Rows * scale && newY >= 0 && newY < Columns * scale) {
-                if (
-                    Grid[newX][newY].Type !== "Wall" &&
-                    Grid[newX][newY].Type !== "Start" &&
-                    !Neighbours.includes(Grid[newX][newY])
-                ) {
-                    Neighbours.push(Grid[newX][newY]);
-                }
-            }
-        }
-    }
+//             if (newX >= 0 && newX < Rows * scale && newY >= 0 && newY < Columns * scale) {
+//                 if (
+//                     Grid[newX][newY].Type !== "Wall" &&
+//                     Grid[newX][newY].Type !== "Start" &&
+//                     !Neighbours.includes(Grid[newX][newY])
+//                 ) {
+//                     Neighbours.push(Grid[newX][newY]);
+//                 }
+//             }
+//         }
+//     }
 
-    Neighbours.sort((a, b) => {
-        return a.HCost - b.HCost;
-    });
+//     Neighbours.sort((a, b) => {
+//         return a.HCost - b.HCost;
+//     });
 
-    return Neighbours;
-}
+//     return Neighbours;
+// }
 
 function GetOppositeEdge(x, y) {
     let OppositeX = Rows - x - 1;
@@ -367,7 +367,7 @@ async function DFSMaze() {
 
             next.Type = "Empty";
             let nextElement = document.getElementById(`${next.x}/${next.y}`);
-            
+
             if (nextElement) nextElement.className = "QueueGridCell";
 
             stack.push(next);
@@ -414,6 +414,12 @@ function getRandomItem(arr) {
 async function PrimsMaze() {
     ResizeGrid();
     let stack = [];
+
+    let startX = 1;
+    let startY = 1;
+
+    let EndX = (Rows * scale) - 3;
+    let EndY = (Columns * scale) - 3;
 
     let StartingNode = Grid[Math.floor((Rows * scale) / 2)][Math.floor((Columns * scale) / 2)];
     console.log(StartingNode)
@@ -505,6 +511,16 @@ async function PrimsMaze() {
        
         
     }
+
+    StartNode = Grid[startX][startY];
+    StartNode.Type = "Start";
+    let startElement = document.getElementById(`${startX}/${startY}`);
+    if (startElement) startElement.className = "StartGridCell"; startElement.textContent = "A"
+
+    EndNode = Grid[EndX][EndY];
+    EndNode.Type = "Finish";
+    let endElement = document.getElementById(`${EndX}/${EndY}`);
+    if (endElement) endElement.className = "FinishGridCell"; endElement.textContent = "B"
 }
 
 async function GrowingTree() {
@@ -758,8 +774,11 @@ async function GreedyBestFirstSearch() {
 
     let OpenList = [];
     let ClosedList = [];
+    const NewHCost = Math.abs(EndNode.x - StartNode.x) + Math.abs(EndNode.y - StartNode.y);
 
     StartNode["GCost"] = 0;  
+    StartNode["HCost"] = NewHCost
+
     OpenList.push(StartNode);
 
     while (OpenList.length > 0) {
@@ -805,7 +824,7 @@ async function GreedyBestFirstSearch() {
             break;
         }
 
-        let Neighbors = GreedySearchNeigbour(CurrentNode);
+        let Neighbors = GetNeighbors(CurrentNode);
         for (let i = 0; i < Neighbors.length; i++) {
             let Neighbor = Neighbors[i];
         
@@ -818,14 +837,19 @@ async function GreedyBestFirstSearch() {
             }
         
             let NewGCost = CurrentNode.GCost + 1;
+            const NewHCost = Math.abs(EndNode.x - Neighbor.x) + Math.abs(EndNode.y - Neighbor.y);
         
             if (!OpenList.includes(Neighbor) || NewGCost < Neighbor.GCost) {
                 Neighbor["GCost"] = NewGCost;
                 Neighbor["Parent"] = CurrentNode;
+                Neighbor["HCost"] = NewHCost;
         
                 if (!OpenList.includes(Neighbor)) {
                     OpenList.push(Neighbor);
-        
+
+                    OpenList.sort((a, b) => {
+                        return a.HCost - b.HCost;
+                    });
                     let ElementCell = document.getElementById(`${Neighbor.x}/${Neighbor.y}`);
                     if (ElementCell && ElementCell.className == "GridCell") {
                         ElementCell.className = "QueueGridCell";
