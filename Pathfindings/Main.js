@@ -20,12 +20,15 @@ StartPathfinding.addEventListener('click', StartPathfindingButton);
 const StartGeneratingMaze = document.getElementById('StartMazeGen');
 StartGeneratingMaze.addEventListener('click', StartMazeGeneration);
 
-
 const ResetGridButtonB = document.getElementById('ResetGridButton');
 ResetGridButtonB.addEventListener('click', ResetGridButton);
 
 const PathfindingSelect = document.getElementById('Algorithms');
 PathfindingSelect.addEventListener('change', OptionChanged);
+
+const MazefindingSelect = document.getElementById('MazeAlgorithms');
+MazefindingSelect.addEventListener('change', OptionChangedMaze);
+
 
 const GridSizeSlider = document.getElementById('GridSize');
 GridSizeSlider.addEventListener('change', function() {
@@ -354,7 +357,7 @@ async function DFSMaze() {
         let neighbors = GetMazeNeighbors(current);
 
         if (neighbors.length > 0) {
-            let next = neighbors[Math.floor(Math.random() * neighbors.length)];
+            let next = getRandomItem(neighbors);
             let wallX = (current.x + next.x) / 2;
             let wallY = (current.y + next.y) / 2;
 
@@ -364,23 +367,29 @@ async function DFSMaze() {
 
             next.Type = "Empty";
             let nextElement = document.getElementById(`${next.x}/${next.y}`);
-            if (nextElement) nextElement.className = "GridCell";
+            
+            if (nextElement) nextElement.className = "QueueGridCell";
 
             stack.push(next);
+
+            const WaitTime = calculateWaitTime(Speed);
+            if (WaitTime > 1) {
+                for (let i = 0; i < WaitTime; i++) {
+                    if (SkipWait) {
+                        SkipWait = false;
+                        break;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 1));
+                    }
+                }
+            if (nextElement) nextElement.className = "GridCell";
+
+           
         } else {
             stack.pop();
         }
 
-        const WaitTime = calculateWaitTime(Speed);
-        if (WaitTime > 1) {
-            for (let i = 0; i < WaitTime; i++) {
-                if (SkipWait) {
-                    SkipWait = false;
-                    break;
-                }
-                await new Promise(resolve => setTimeout(resolve, 1));
-                }
-            }      
+             
     }
 
   
@@ -393,23 +402,26 @@ async function DFSMaze() {
 }
 
 function GetRandomNode() {
-    let X = Math.random * (Rows * scale);
-    let Y = Math.random * (Columns * scale);
+    let X = Math.floor(Math.random() * (Rows * scale));
+    let Y =  Math.floor(Math.random() * (Columns * scale));
     return Grid[X][Y]
+}
+
+function getRandomItem(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
 }
 
 async function PrimsMaze() {
     ResizeGrid();
     let stack = [];
-    let Frontier = [];
-    
+
+    let StartingNode = Grid[Math.floor((Rows * scale) / 2)][Math.floor((Columns * scale) / 2)];
+    console.log(StartingNode)
 
     for (let i = 0; i < Rows * scale; i++) {
-
         if (!Grid[i]) {
             Grid[i] = [];
         }
-
         for (let j = 0; j < Columns * scale; j++) {
 
             if (!Grid[i][j]) {
@@ -441,29 +453,24 @@ async function PrimsMaze() {
         }
     }
 
-    let startNode = GetRandomNode();
-
-    let startX = startNode.x;
-    let startY = startNode.y;
-
-    startNode.Type = "Empty";
-    let startElement = document.getElementById(`${startX}/${startY}`);
-    if (startElement) startElement.className = "GridCell";
-
-    stack.push(startNode);
-
-    StartNode = Grid[startX][startY];
-    StartNode.Type = "Start";
-
-    startElement = document.getElementById(`${startX}/${startY}`);
-    if (startElement) startElement.className = "StartGridCell"; startElement.textContent = "A"
+    stack.push(StartingNode);
 
     while (stack.length > 0) {
-        let current = stack[stack.length - 1];
-        let neighbors = GetMazeNeighbors(current);
+
+        let current = getRandomItem(stack);
+
+        let neighbors = GetMazeNeighbors(current)
 
         if (neighbors.length > 0) {
-            let next = neighbors[Math.floor(Math.random() * neighbors.length)];
+            let next = getRandomItem(neighbors);
+            while (stack.includes(next)) {
+                neighbors.splice(neighbors.indexOf(next), 1);
+                next = getRandomItem(neighbors);
+            }
+            if (!next) {
+                stack.splice(stack.indexOf(current), 1);
+                continue;
+            }
             let wallX = (current.x + next.x) / 2;
             let wallY = (current.y + next.y) / 2;
 
@@ -471,33 +478,149 @@ async function PrimsMaze() {
             let wallElement = document.getElementById(`${wallX}/${wallY}`);
             if (wallElement) wallElement.className = "GridCell";
 
+           
+
             next.Type = "Empty";
             let nextElement = document.getElementById(`${next.x}/${next.y}`);
-            if (nextElement) nextElement.className = "GridCell";
+            if (nextElement) nextElement.className = "QueueGridCell";
 
             stack.push(next);
-        } else {
-            stack.pop();
+
+            const WaitTime = calculateWaitTime(Speed);
+            if (WaitTime > 1) {
+                for (let i = 0; i < WaitTime; i++) {
+                    if (SkipWait) {
+                        SkipWait = false;
+                        break;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 1));
+                    }
+                } 
+            if (nextElement) nextElement.className = "GridCell";
+        }
+       else {
+            stack.splice(stack.indexOf(current), 1);
         }
 
-        const WaitTime = calculateWaitTime(Speed);
-        if (WaitTime > 1) {
-            for (let i = 0; i < WaitTime; i++) {
-                if (SkipWait) {
-                    SkipWait = false;
-                    break;
-                }
-                await new Promise(resolve => setTimeout(resolve, 1));
-                }
-            }      
+       
+        
+    }
+}
+
+async function GrowingTree() {
+    ResizeGrid();
+    let stack = [];
+    let startX = 1;
+    let startY = 1;
+
+    let EndX = (Rows * scale) - 3;
+    let EndY = (Columns * scale) - 3;
+
+    
+
+    let StartingNode = Grid[Math.floor((Rows * scale) / 2)][Math.floor((Columns * scale) / 2)];
+    console.log(StartingNode)
+
+    for (let i = 0; i < Rows * scale; i++) {
+        if (!Grid[i]) {
+            Grid[i] = [];
+        }
+        for (let j = 0; j < Columns * scale; j++) {
+
+            if (!Grid[i][j]) {
+                Grid[i][j] = {
+                    Type: "Wall",
+                    x: i,
+                    y: j,
+                    FCost: 0,
+                    GCost: 0,
+                    HCost: 0,
+                    Parent: null,
+                };
+
+                const GridCell = document.createElement("div");
+                GridCell.className = "GridCell";
+                GridCell.id = `${i}/${j}`;
+
+                GridCell.style.width = `${25}px`;
+                GridCell.style.height = `${25}px`;
+                GridCell.style.border = `${2}px solid black`;
+
+                Container.appendChild(GridCell);
+
+            }
+
+            Grid[i][j].Type = "Wall";
+            let Element = document.getElementById(`${i}/${j}`);
+            if (Element) Element.className = "OcupiedGridCell";
+        }
     }
 
-  
+    stack.push(StartingNode);
+
+    while (stack.length > 0) {
+
+        let current = getRandomItem(stack);
+
+        for (let i = 0;i < 4;i++) {
+            
+            let neighbors = GetMazeNeighbors(current)
+
+            if (neighbors.length > 0) {
+                let next = getRandomItem(neighbors);
+                while (stack.includes(next)) {
+                    break
+                }
+                if (!next) {
+                    stack.splice(stack.indexOf(current), 1);
+                    break;
+                }
+                let wallX = (current.x + next.x) / 2;
+                let wallY = (current.y + next.y) / 2;
+
+                Grid[wallX][wallY].Type = "Empty";
+                let wallElement = document.getElementById(`${wallX}/${wallY}`);
+                if (wallElement) wallElement.className = "GridCell";
+
+                next.Type = "Empty";
+                let nextElement = document.getElementById(`${next.x}/${next.y}`);
+                if (nextElement) nextElement.className = "QueueGridCell";
+
+                stack.push(next);
+
+                current = next;
+
+                const WaitTime = calculateWaitTime(Speed);
+                if (WaitTime > 1) {
+                for (let i = 0; i < WaitTime; i++) {
+                    if (SkipWait) {
+                        SkipWait = false;
+                        break;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 1));
+                    }
+                } 
+                if (nextElement) nextElement.className = "GridCell";
+
+            }
+        else {
+                stack.splice(stack.indexOf(current), 1);
+                break
+            }
+           
+        }
+        
+    }
+
+    StartNode = Grid[startX][startY];
+    StartNode.Type = "Start";
+    let startElement = document.getElementById(`${startX}/${startY}`);
+    if (startElement) startElement.className = "StartGridCell"; startElement.textContent = "A"
+
     EndNode = Grid[EndX][EndY];
     EndNode.Type = "Finish";
-    let endElement = document.getElementById(`${EndX}/${EndY}`);  
- 
-    if (endElement) endElement.className = "FinishGridCell";  endElement.textContent = "B";
+    let endElement = document.getElementById(`${EndX}/${EndY}`);
+    if (endElement) endElement.className = "FinishGridCell"; endElement.textContent = "B"
 }
 
 async function BreadthWidthSearch() {
@@ -729,29 +852,29 @@ async function GreedyBestFirstSearch() {
     ResetCosts();
 }
 
-async function VectorField() {
-    if (EndNode == null) {
-        alert("Please select a start and end node");
-        return;
-    }
+// async function VectorField() {
+//     if (EndNode == null) {
+//         alert("Please select a start and end node");
+//         return;
+//     }
 
-    if (PathfindingInProcess === true) {
-        alert("Pathfinding Already In Process");
-        return;
-    };
+//     if (PathfindingInProcess === true) {
+//         alert("Pathfinding Already In Process");
+//         return;
+//     };
 
-    OpenList = [];
-    ClosedList = [];
+//     OpenList = [];
+//     ClosedList = [];
 
-    OpenList.push(EndNode);
+//     OpenList.push(EndNode);
 
-    while (OpenList.length < 0 ) {
-        const CurrentNode = OpenList.shift() 
-        Neigbours = GetNeighbors()
+//     while (OpenList.length < 0 ) {
+//         const CurrentNode = OpenList.shift() 
+//         Neigbours = GetNeighbors()
 
-        const WaitTime = calculateWaitTime(Speed);
-    }
-}
+//         const WaitTime = calculateWaitTime(Speed);
+//     }
+// }
 
 function calculateWaitTime(Speed) {
     if (Speed >= 100) {
@@ -761,10 +884,12 @@ function calculateWaitTime(Speed) {
         return 50000;
     }
 
-    const maxWaitTime = 25;
+    let maxWaitTime = 500;
     const minWaitTime = 0; 
 
-   return lerp(maxWaitTime, minWaitTime, Speed / 100);
+    maxWaitTime /= scale;
+
+   return Math.floor(lerp(maxWaitTime, minWaitTime, (Speed / 100)));
 }
 
 async function AStarSearch() {
@@ -944,7 +1069,11 @@ function StartPathfindingButton() {
 function StartMazeGeneration() {
     if (ChosenMazeAlgorithm === "DFSMaze") {
         DFSMaze();
-    } else {
+    } else if (ChosenMazeAlgorithm === "PrimsMaze") {
+        PrimsMaze();
+    } else if (ChosenMazeAlgorithm === "GrowingTree") {
+        GrowingTree();
+    }else {
         alert("Maze Algorithm Not Yet Implemented");
     }
 }
@@ -958,7 +1087,7 @@ function OptionChanged() {
 }
 
 function OptionChangedMaze() {
-    ChosenMazeAlgorithm = MazeSelect.value;
+    ChosenMazeAlgorithm = MazefindingSelect.value;
 }
 
 Container.addEventListener('click', function(event) {
