@@ -387,12 +387,8 @@ async function DFSMaze() {
            
         } else {
             stack.pop();
-        }
-
-             
+        }  
     }
-
-  
     EndNode = Grid[EndX][EndY];
     EndNode.Type = "Finish";
     let endElement = document.getElementById(`${EndX}/${EndY}`);  
