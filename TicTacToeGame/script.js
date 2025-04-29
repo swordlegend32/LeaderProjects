@@ -14,12 +14,14 @@ let Style = {
 };
 
 // Game state variables
+
 let currentPlayer = "X";
 let startingPlayer = "X"; // Starting player for the game
 let gameOver = false;
 let moves = 0;
 
 // --- Q-Learning AI Class ---
+
 class TicTacToeAI {
     constructor(player) {
         this.player = player;
@@ -54,33 +56,33 @@ class TicTacToeAI {
 
     chooseAction(grid) {
         const state = this.getState(grid);
-    
         const validMoves = this.getValidMoves(grid);
     
-        // Explore random move
-        if (Math.random() < this.explorationRate && validMoves.length > 0) {
-            return validMoves[Math.floor(Math.random() * validMoves.length)];
+        // Filter out moves that have already been explored in the Q-table for this state
+        const unexploredMoves = validMoves.filter(move => {
+            const actionKey = `${move.row},${move.col}`;
+            return !this.qTable[state] || !(actionKey in this.qTable[state]);
+        });
+    
+        if (Math.random() < this.explorationRate && unexploredMoves.length > 0) {
+            return unexploredMoves[Math.floor(Math.random() * unexploredMoves.length)];
         }
     
-        // Exploit best known move
         const bestAction = this.getBestAction(state);
         if (bestAction) {
             const [row, col] = bestAction.split(",").map(Number);
-            // Make sure the spot is still empty
             if (grid[row][col] === "") {
                 return { row, col };
             }
         }
     
-        // Fallback random move if best action is occupied
         if (validMoves.length > 0) {
             return validMoves[Math.floor(Math.random() * validMoves.length)];
         }
     
-        return null; // No moves available
+        return null; 
     }
     
-
     getValidMoves(grid) {
         const validMoves = [];
         for (let row = 0; row < 3; row++) {
@@ -108,6 +110,7 @@ class TicTacToeAI {
             oldValue + this.learningRate * (reward + this.discountFactor * nextBestValue - oldValue);
     }
 }
+
 
 // --- Rule-Based AI Class ---
 class RuleBasedAI {
@@ -172,10 +175,34 @@ class RuleBasedAI {
     }
 }
 
-// --- Game Setup ---
+
+
+// --- Game Setup --- //
 const ai2 = new TicTacToeAI("X");
 const ai = new TicTacToeAI("O");
 
+function canWin(grid, player) {
+
+    for (let i = 0; i < 3; i++) {
+        if (grid[i][0] === player && grid[i][1] === player && grid[i][2] === "") return { row: i, col: 2 };
+        if (grid[i][0] === player && grid[i][2] === player && grid[i][1] === "") return { row: i, col: 1 };
+        if (grid[i][1] === player && grid[i][2] === player && grid[i][0] === "") return { row: i, col: 0 };
+
+        if (grid[0][i] === player && grid[1][i] === player && grid[2][i] === "") return { row: 2, col: i };
+        if (grid[0][i] === player && grid[2][i] === player && grid[1][i] === "") return { row: 1, col: i };
+        if (grid[1][i] === player && grid[2][i] === player && grid[0][i] === "") return { row: 0, col: i };
+    }
+
+    if (grid[0][0] === player && grid[1][1] === player && grid[2][2] === "") return { row: 2, col: 2 };
+    if (grid[0][0] === player && grid[2][2] === player && grid[1][1] === "") return { row: 1, col: 1 };
+    if (grid[1][1] === player && grid[2][2] === player && grid[0][0] === "") return { row: 0, col: 0 };
+
+    if (grid[0][2] === player && grid[1][1] === player && grid[2][0] === "") return { row: 2, col: 0 };
+    if (grid[0][2] === player && grid[2][0] === player && grid[1][1] === "") return { row: 1, col: 1 };
+    if (grid[1][1] === player && grid[2][0] === player && grid[0][2] === "") return { row: 0, col: 2 };
+
+    return null;
+}
 
 
 const SpeedSlider = document.getElementById('Speed');
@@ -224,39 +251,88 @@ function StartAiGame() {
 
 function makeMove(row, col) {
     if (Grid[row][col] === "" && !gameOver) {
-        const prevState = ai.getState(Grid);
+
+        const opponent = currentPlayer === "X" ? "O" : "X";
+
+        const missedWinningMove = canWin(Grid, currentPlayer);
+        const opponentWinningMove = canWin(Grid, opponent);
 
         Grid[row][col] = currentPlayer;
+
+        const currentState = ai.getState(Grid);
+
+        const NewWinningMove = canWin(Grid, currentPlayer);
+
         moves++;
         renderGrid();
-
 
         if (checkWin()) {
             console.log(`${currentPlayer} wins!`);
             gameOver = true;
 
             const reward = currentPlayer === ai.player ? 15 : -15;
-            ai.updateQTable(prevState, { row, col }, reward, ai.getState(Grid));
-            ai2.updateQTable(prevState, { row, col }, -reward, ai2.getState(Grid));
+            ai.updateQTable(currentState, { row, col }, reward, ai.getState(Grid));
+            ai2.updateQTable(currentState, { row, col }, -reward, ai2.getState(Grid));
 
             setTimeout(resetGame, calculateWaitTime(Speed) * 5);
             return;
         } else if (moves === 9) {
             console.log("It's a draw!");
             gameOver = true;
-            ai.updateQTable(prevState, { row, col }, -2, ai.getState(Grid));
-            ai2.updateQTable(prevState, { row, col }, 2, ai2.getState(Grid));
+
+            const reward = currentPlayer === ai.player ? 2 : -2;
+
+            ai.updateQTable(currentState, { row, col }, reward, ai.getState(Grid));
+            ai2.updateQTable(currentState, { row, col }, -reward, ai2.getState(Grid));
+
             setTimeout(resetGame, calculateWaitTime(Speed) * 5);
             return;
         }
 
+
+        if (missedWinningMove) {
+            if (currentPlayer === ai.player) {
+                ai.updateQTable(currentState, { row, col }, -15, ai.getState(Grid)); // Penalize for missing a winning move
+            } else {
+                ai2.updateQTable(currentState, { row, col }, -15, ai2.getState(Grid)); // Penalize for missing a winning move
+            }
+        }
+    
+        const opponentWinningMove2 = canWin(Grid, opponent);
+
+    
+        if (opponentWinningMove && opponentWinningMove2) {
+            if (currentPlayer === ai.player) {
+                ai.updateQTable(currentState, { row, col }, -10, ai.getState(Grid)); // Penalize for failing to block
+            } else {
+                ai2.updateQTable(currentState, { row, col }, -10, ai2.getState(Grid)); // Penalize for failing to block
+            }
+        } else if (opponentWinningMove && !opponentWinningMove2) {
+            if (currentPlayer === ai.player) {
+                ai.updateQTable(currentState, { row, col }, 5, ai.getState(Grid)); // Reward for blocking
+            } else {
+                ai2.updateQTable(currentState, { row, col }, 5, ai2.getState(Grid)); // Reward for blocking
+            }
+        }
+
+        if (!opponentWinningMove && !missedWinningMove && NewWinningMove) {
+            if (currentPlayer === ai.player) {
+                ai.updateQTable(currentState, { row, col }, 2, ai.getState(Grid));
+            } else {
+                ai2.updateQTable(currentState, { row, col }, 2, ai2.getState(Grid)); 
+            }
+        }
+
         currentPlayer = currentPlayer === "X" ? "O" : "X";
+
         setTimeout(StartAiGame, calculateWaitTime(Speed));
-        
-    }
-    else {
+
+
+
+    } else {
         console.log("Invalid move. Cell already occupied or game over.");
     }
+
 }
 
 function renderGrid() {

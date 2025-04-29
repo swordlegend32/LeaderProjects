@@ -6,9 +6,16 @@ def monty_hall_simulation(num_trials):
     stay_wins = 0
     new_wins = 0
 
-    for _ in range(num_trials):
+    previous_precentage = 0
+
+    for i in range(num_trials):
         doors = ['goat', 'goat', 'car']
         random.shuffle(doors)
+
+        current_percentage = (i / num_trials) * 100
+        if current_percentage - previous_precentage >= 0.1:
+            print(f"{current_percentage:.2f}%")
+            previous_precentage = current_percentage
 
         initial_choice = random.randint(0, 2)
 
@@ -33,7 +40,16 @@ def coin_flip_simulation(num_trials):
     heads_count = 0
     tails_count = 0
 
-    for _ in range(num_trials):
+    previous_precentage = 0
+    
+
+    for i in range(num_trials):
+
+        current_percentage = (i / num_trials) * 100
+        if current_percentage - previous_precentage >= 0.1:
+            print(f"{current_percentage:.2f}%")
+            previous_precentage = current_percentage
+
         flip_result = random.choice(['heads', 'tails'])
         if flip_result == 'heads':
             heads_count += 1

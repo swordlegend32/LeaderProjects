@@ -1,0 +1,62 @@
+#game {
+  width: 100%;
+  height: 100vh;
+  background-color: rgb(59, 59, 59);
+  position: relative;
+}
+
+body{
+    margin: 0px;
+    padding: 0px;
+}
+
+.Player {
+  width: 20px;
+  height: 100px;
+  background-color: black;
+  position: absolute;
+
+}
+
+#P1 {
+  left: 10%;
+  transform: translate(50%,-50%);
+}
+
+#P2 {
+  right: 10%;
+  top: 50%;
+  transform: translate(-50%,-50%);
+}
+
+#ball {
+  width: 20px;
+  height: 20px;
+  background-color: black;
+  position: absolute;
+  border-radius: 50%;
+  top: 50%; 
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+div {
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+}
+
+#P1Score {
+    position: absolute;
+    left: 10%;
+    top: 10px;
+    font-size: 24px;
+    color: white;
+}
+
+#P2Score {
+    position: absolute;
+    right: 10%;
+    top: 10px;
+    font-size: 24px;
+    color: white;
+}
