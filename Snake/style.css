@@ -1,0 +1,44 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #000;
+    color: #0f0;
+    font-family: "Courier New", monospace;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden;
+}
+
+canvas {
+    background: #111;
+    border: 4px solid #333;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+h1, p {
+    margin: 10px 0;
+    font-size: 1.2rem;
+    color: #0f0;
+}
+
+#score-container {
+    display: flex;
+    justify-content: space-between;
+    width: 300px;
+    margin-top: 10px;
+}
+
+#score, #high-score {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
