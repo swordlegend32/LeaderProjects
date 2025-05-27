@@ -112,7 +112,7 @@ let p1Down = false;
 function updatePositions(dt) {
     ballX += ballSpeedX * dt;
     ballY += ballSpeedY * dt;
-    // Player movement
+    
     if (p1Up) p1Y = Math.max(50, p1Y - paddleSpeed * dt);
     if (p1Down) p1Y = Math.min(game.clientHeight - 50, p1Y + paddleSpeed * dt);
 
@@ -132,8 +132,8 @@ function updatePositions(dt) {
 
     if (ballX <= 0 || ballX >= game.clientWidth - 20) {
         resetGame();
-        if (ballX <= 0) p1Score++;
-        else p2Score++;
+        if (ballX <= 0) p2Score++;
+        else p1Score++;
         p1ScoreDisplay.textContent = p1Score;
         p2ScoreDisplay.textContent = p2Score;
     }

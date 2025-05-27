@@ -43,7 +43,6 @@ label {
     transition: background 0.2s;
 }
 
-/* Change background color when the slider is active (dragged) */
 .Slider:active {
     background: linear-gradient(90deg, rgb(0, 255, 255), rgb(0, 255, 255));
 }

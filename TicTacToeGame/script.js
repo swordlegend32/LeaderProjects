@@ -229,8 +229,6 @@ function calculateWaitTime(Speed) {
     let maxWaitTime = 500;
     const minWaitTime = 0; 
 
-    maxWaitTime /= 1;
-
    return Math.floor(lerp(maxWaitTime, minWaitTime, (Speed / 100)));
 }
 
@@ -274,18 +272,18 @@ function makeMove(row, col) {
             ai.updateQTable(currentState, { row, col }, reward, ai.getState(Grid));
             ai2.updateQTable(currentState, { row, col }, -reward, ai2.getState(Grid));
 
-            setTimeout(resetGame, calculateWaitTime(Speed) * 5);
+            setTimeout(InitializeGame, calculateWaitTime(Speed) * 5);
             return;
         } else if (moves === 9) {
             console.log("It's a draw!");
             gameOver = true;
 
-            const reward = currentPlayer === ai.player ? 2 : -2;
+            const reward = 2
 
             ai.updateQTable(currentState, { row, col }, reward, ai.getState(Grid));
-            ai2.updateQTable(currentState, { row, col }, -reward, ai2.getState(Grid));
+            ai2.updateQTable(currentState, { row, col }, reward, ai2.getState(Grid));
 
-            setTimeout(resetGame, calculateWaitTime(Speed) * 5);
+            setTimeout(InitializeGame, calculateWaitTime(Speed) * 5);
             return;
         }
 
@@ -359,7 +357,7 @@ function checkWin() {
     return false;
 }
 
-function resetGame() {
+function InitializeGame() {
     Grid = [
         ["", "", ""],
         ["", "", ""],
@@ -377,7 +375,7 @@ function resetGame() {
 for (let i = 0; i < 9; i++) {
     document.getElementById(`cell-${i}`).addEventListener("click", () => makeMove(Math.floor(i / 3), i % 3));
 }
-document.getElementById("resetbutton").addEventListener("click", resetGame);
+document.getElementById("resetbutton").addEventListener("click", InitializeGame);
 
 // Initialize the first game
-resetGame();
+InitializeGame();
